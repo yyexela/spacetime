@@ -33,7 +33,7 @@ def main():
     load_data, visualize_data = initialize_data_functions(args)
     print_header('*** DATASET ***')
     print_config(experiment_configs['dataset'])
-    
+ 
     print_header('*** LOADER ***')
     print_config(experiment_configs['loader'])
     

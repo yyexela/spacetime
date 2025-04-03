@@ -1,3 +1,12 @@
+# TODO: 
+
+- `configs/datasets` for ODE_Lorenz and PDE_KS
+  - size is seq_len, label_len, pred_len
+- `configs/loader` for ODE_Lorenz and PDE_KS
+- `dataloaders` for ODE_Lorenz and PDE_KS
+- Skip connection doesn't work for multivariate out of the box (see GH issues)
+- Length of each of validation, testing, and training datasets need to be larger than batch size
+
 # SpaceTime 🌌⏱️
 
 Code for SpaceTime, a neural net architecture for time series. Named after state-**space** models for **time** series forecasting and classification.

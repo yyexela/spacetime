@@ -27,7 +27,7 @@ def get_dataloader_config(args, config_dir='./configs'):
 # Update configs from argparse args
 # ---------------------------------
 def update_dataset_config_from_args(config, args):
-    if args.dataset_type == 'informer':
+    if args.dataset_type in ['informer', 'ctf']:
         config.size = [args.lag, args.horizon, args.horizon]
         config.features = args.features
         config.variant = args.variant

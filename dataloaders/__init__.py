@@ -39,6 +39,13 @@ def get_data_module(args):
         print(f'Dataset type: {args.dataset_type}')
         print(f'-> dataset: {args.dataset}{args.variant}')
         data_module = args.dataset_type
+
+    elif args.dataset in ['ODE_Lorenz', 'PDE_KS']:
+        args.dataset_type = "ctf"
+        # args.variant: needs to be matrix ID, like 3 for X3
+        print(f'Dataset type: {args.dataset_type}')
+        print(f'-> dataset: {args.dataset}{args.variant}')
+        data_module = args.dataset_type
         
     else:
         data_module = f'{args.dataset_type}.{dataset_fname}'
