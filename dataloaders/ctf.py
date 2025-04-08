@@ -96,7 +96,7 @@ class CTFSequenceDataset(SequenceDataset):
         return x, y, *z
 
     def setup(self):
-        self.data_dir = default_data_path.parent.parent.parent.parent / 'Datasets' / self._name_
+        self.data_dir = default_data_path.parent.parent.parent.parent / 'data' / self._name_ / 'train'
 
         self.dataset_train = self._dataset_cls(
             root_path=self.data_dir,
