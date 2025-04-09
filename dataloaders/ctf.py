@@ -176,10 +176,9 @@ class CTFDataset(Dataset):
         #     breakpoint()
 
     def _borders(self, df_raw):
-        num_train = int(len(df_raw) * 0.7)
-        num_test = int(len(df_raw) * 0.2)
-        num_vali = len(df_raw) - num_train - num_test
-        border1s = [0, num_train - self.seq_len, len(df_raw) - num_test - self.seq_len]
+        num_train = int(len(df_raw) * 0.8)
+        num_vali = len(df_raw) - num_train
+        border1s = [0, num_train - self.seq_len, len(df_raw) - self.seq_len]
         border2s = [num_train, num_train + num_vali, len(df_raw)]
 
         # alexey
@@ -342,6 +341,34 @@ class PDE_KD(CTFSequenceDataset):
         10: "X10train.mat"
     }
 
+class PDE_KS(CTFSequenceDataset):
+    _name_ = "PDE_KS"
+
+    _dataset_cls = _Dataset_CTF
+
+    init_defaults = {
+        "size": None,
+        "variant": 0,
+        "scale": True,
+        "inverse": False,
+        "timeenc": 0,
+        "freq": "h",
+        "cols": None,
+    }
+
+    variants = {
+        1: "X1train.mat",
+        2: "X2train.mat",
+        3: "X3train.mat",
+        4: "X4train.mat",
+        5: "X5train.mat",
+        6: "X6train.mat",
+        7: "X7train.mat",
+        8: "X8train.mat",
+        9: "X9train.mat",
+        10: "X10train.mat"
+    }
+
 class ODE_Lorenz(CTFSequenceDataset):
     _name_ = "ODE_Lorenz"
 
@@ -371,7 +398,10 @@ class ODE_Lorenz(CTFSequenceDataset):
     }
 
 def load_data(config_dataset, config_loader):
-    dataset = ODE_Lorenz(**config_dataset)
+    if config_dataset['_name_'] == "ODE_Lorenz":
+        dataset = ODE_Lorenz(**config_dataset)
+    elif config_dataset['_name_'] == "PDE_KS":
+        dataset = PDE_KS(**config_dataset)
     dataset.setup()
     
     train_loader = dataset.train_dataloader(**config_loader)

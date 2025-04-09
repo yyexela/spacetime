@@ -50,8 +50,8 @@ def main():
     # Loading Data
     dataloaders = load_data(experiment_configs['dataset'], 
                             experiment_configs['loader'])
-    train_loader, val_loader, test_loader = dataloaders
-    splits = ['train', 'val', 'test']
+    train_loader, val_loader, _ = dataloaders
+    splits = ['train', 'val']
     dataloaders_by_split = {split: dataloaders[ix] 
                             for ix, split in enumerate(splits)}
     eval_loaders = get_evaluation_loaders(dataloaders, batch_size=args.batch_size)
@@ -148,7 +148,7 @@ def main():
                         return_best=True, early_stopping_epochs=args.early_stopping_epochs)    
     
     # Eval best val checkpoint
-    eval_splits = ['eval_train', 'val', 'test']
+    eval_splits = ['eval_train', 'val']
     eval_loaders_by_split = {split: eval_loaders[ix] for ix, split in
                              enumerate(eval_splits)}
     model, log_metrics, total_y = evaluate_model(model, dataloaders=eval_loaders_by_split, 

@@ -1,4 +1,4 @@
-_name_: ODE_Lorenz
+_name_: PDE_KS
 size:
   - 384
   - 96
