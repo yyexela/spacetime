@@ -164,3 +164,48 @@ def shared_step(model, dataloader, optimizer, scheduler, criterions, epoch,
             
     model.cpu()
     return model, metrics, total_y
+
+def create_forecast(model, start_mat, config, n_out, 
+                input_transform=None, output_transform=None):
+
+    if input_transform is None:
+        input_transform = lambda x: x
+        
+    if output_transform is None:
+        output_transform = lambda y: y
+
+    try: 
+        model.set_eval()
+    except Exception as e: 
+        print(e)
+        model.eval()
+    grad_enabled = False
+        
+    with torch.set_grad_enabled(grad_enabled):
+        model.to(config.device)
+        
+        # Save output
+        forecast_mat = start_mat
+
+        while(torch.cat([forecast_mat]).shape[0] < n_out):
+            x = forecast_mat[-model.lag:,:].unsqueeze(0)
+            
+            # Only take in lag terms for input
+            if x.shape[1] != model.lag:
+                raise Exception(f"Error: input x has shape {x.shape} but requires second dim to be {model.lag}")
+
+            # Transform batch data 
+            u = input_transform(x)
+            u = u.to(config.device)
+            u = u.float()
+
+            # Return (model outputs), (model last-layer next-step inputs)
+            y_pred, z_pred = model(u)
+            y_pred = [output_transform(_y) if _y is not None else _y 
+                      for _y in y_pred][0][0]
+            y_pred = y_pred.cpu()
+            forecast_mat = torch.cat([forecast_mat, y_pred])
+
+    model.cpu()
+    forecast_mat = forecast_mat[0:n_out,:].cpu()
+    return forecast_mat

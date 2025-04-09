@@ -1,6 +1,7 @@
 import os
 import copy
 import torch
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -13,7 +14,7 @@ from utils.logging import print_header, print_args, print_config
 from optimizer import get_optimizer, get_scheduler
 from loss import get_loss
 from data_transforms import get_data_transforms
-from train import train_model, evaluate_model, plot_forecasts
+from train import train_model, evaluate_model, forecast_model, plot_forecasts
 
 from setup import format_arg, seed_everything
 from setup import initialize_args
@@ -23,12 +24,15 @@ from setup.configs.model import update_output_config_from_args  # For multivaria
 
 from model.network import SpaceTime
 
+from ctf4science.data_module import load_dataset
+
+file_dir = Path(__file__).parent
 
 def main():
     print_header('*** EXPERIMENT ARGS ***')
     args = initialize_args()
     seed_everything(args.seed)
-    experiment_configs = load_main_config(args, config_dir='./configs')
+    experiment_configs = load_main_config(args, config_dir=file_dir / 'configs')
     
     load_data, visualize_data = initialize_data_functions(args)
     print_header('*** DATASET ***')
@@ -58,7 +62,7 @@ def main():
     output_dim = y.shape[1]
     
     # Initialize Model
-    args.device = (torch.device('cuda:0') 
+    args.device = (torch.device('cuda:2') 
                    if torch.cuda.is_available() and not args.no_cuda
                    else torch.device('cpu'))
     model_configs = {'embedding_config': args.embedding_config,
@@ -66,7 +70,7 @@ def main():
                      'decoder_config':   args.decoder_config,
                      'output_config':    args.output_config}
     model_configs = OmegaConf.create(model_configs)
-    model_configs = load_model_config(model_configs, config_dir='./configs/model',
+    model_configs = load_model_config(model_configs, config_dir=file_dir / 'configs' / 'model',
                                       args=args)
     
     model_configs['inference_only'] = False
@@ -163,6 +167,30 @@ def main():
     if not args.no_wandb:
         wandb.log({"forecast_plot": fig})
         wandb.log(log_metrics)
+
+    # Compute forecast past training set for N steps
+    if experiment_configs['dataset']['_name_'] in ['ODE_Lorenz', 'PDE_KS']:
+        train_data, test_data = load_dataset(experiment_configs['dataset']['_name_'], experiment_configs['dataset']['variant'])
+
+        lag = experiment_configs['dataset']['size'][0]
+        horizon = experiment_configs['dataset']['size'][2]
+
+        train_data = torch.tensor((train_data.T))
+        test_data = torch.tensor((test_data.T))
+
+        pred_mat = forecast_model(model, start_mat=train_data[-lag:,:], config=args,
+                                        n_out=test_data.shape[0], 
+                                        input_transform=input_transform, 
+                                        output_transform=output_transform)
+
+        pred_mat = np.asarray(pred_mat).T
+
+        # Make tmp output dir
+        (file_dir / 'tmp_pred').mkdir(exist_ok=True)
+
+        # Save file
+        np.save(file_dir / 'tmp_pred' / 'pred_mat.npy', pred_mat)
+
                      
     
 if __name__ == '__main__':

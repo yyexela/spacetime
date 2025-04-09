@@ -1,4 +1,4 @@
-# TODO: 
+# alexey: 
 
 - `configs/datasets` for ODE_Lorenz and PDE_KS
   - size is seq_len, label_len, pred_len
@@ -6,6 +6,7 @@
 - `dataloaders` for ODE_Lorenz and PDE_KS
 - Skip connection doesn't work for multivariate out of the box (see GH issues)
 - Length of each of validation, testing, and training datasets need to be larger than batch size
+- Skip testing dataset
 
 # SpaceTime 🌌⏱️
 

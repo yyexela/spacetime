@@ -6,11 +6,23 @@ import torch
 
 from utils.logging import type_of_script
 
+def initialize_create_forecast(config):
+    step_module = importlib.import_module(f'train.step.{config.dataset_type}')
+    return getattr(step_module, 'create_forecast')
 
 def initialize_shared_step(config):
     step_module = importlib.import_module(f'train.step.{config.dataset_type}')
     return getattr(step_module, 'shared_step')
 
+def create_forecast(model, start_mat, 
+              config, n_out, input_transform=None, output_transform=None):
+    create_forecast = initialize_create_forecast(config)
+    
+    forecast_mat = create_forecast(model, start_mat, config, n_out, 
+                                        input_transform=input_transform,
+                                        output_transform=output_transform)
+
+    return forecast_mat
         
 def run_epoch(model, dataloaders, optimizer, scheduler, criterions, 
               config, epoch, input_transform=None, output_transform=None,

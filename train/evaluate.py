@@ -4,9 +4,15 @@ Functions for evaluating trained models and plotting forecasts
 import torch
 
 from loss import get_loss
-from .epoch import run_epoch
+from .epoch import run_epoch, create_forecast
 from utils.logging import print_header
 
+def forecast_model(model, **kwargs):
+    model.eval()
+    with torch.no_grad():
+        forecast_mat = create_forecast(model, **kwargs)
+                
+    return forecast_mat
 
 def evaluate_model(model, **kwargs):
     model.eval()

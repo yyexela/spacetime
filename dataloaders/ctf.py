@@ -161,6 +161,7 @@ class CTFDataset(Dataset):
         # init
         assert flag in ["train", "test", "val"]
         type_map = {"train": 0, "val": 1, "test": 2}
+        self.flag = flag
         self.set_type = type_map[flag]
 
         self.scale = scale

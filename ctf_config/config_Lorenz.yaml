@@ -1,0 +1,26 @@
+dataset:
+  name: ODE_Lorenz
+  pair_id: [3]
+model:
+  name: spacetime
+  lag: 150
+  horizon: 150
+  embedding_config: "embedding/repeat"
+  encoder_config: "encoder/default_no_skip"
+  decoder_config: "decoder/default"
+  output_config: "output/default"
+  n_blocks: 1
+  kernel_dim: 64
+  norm_order: 1
+  batch_size: 50
+  dropout: 0.25
+  lr: 1e-3
+  weight_decay: 1e-4
+  max_epochs: 5
+  early_stopping_epochs: 5
+  data_transform: "mean"
+  loss: "informer_rmse"
+  val_metric: "informer_rmse"
+  criterion_weights: [1, 1, 1]
+  seed: 0
+  no_wandb: True
