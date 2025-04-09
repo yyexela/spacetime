@@ -57,7 +57,7 @@ def main(config_path: str) -> None:
         """\
         python\
         {spacetime_main_path}\
-        --dataset={dataset}\
+        --dataset {dataset}\
         --variant {variant}\
         --lag {lag}\
         --horizon {horizon}\
