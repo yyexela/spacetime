@@ -154,9 +154,9 @@ def main(config_path: str) -> None:
             fig = viz.plot_from_run(dataset_name, pair_id, results_directory, plot_type=plot_type)
             viz.save_figure_results(fig, dataset_name, model_name, batch_id, pair_id, plot_type)
 
-    # Save aggregated batch results
-    with open(results_directory.parent / 'batch_results.yaml', 'w') as f:
-        yaml.dump(batch_results, f)
+        # Save aggregated batch results
+        with open(results_directory.parent / 'batch_results.yaml', 'w') as f:
+            yaml.dump(batch_results, f)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

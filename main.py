@@ -24,7 +24,7 @@ from setup.configs.model import update_output_config_from_args  # For multivaria
 
 from model.network import SpaceTime
 
-from ctf4science.data_module import load_dataset
+from ctf4science.data_module import load_dataset_split
 
 file_dir = Path(__file__).parent
 
@@ -170,26 +170,75 @@ def main():
 
     # Compute forecast past training set for N steps
     if experiment_configs['dataset']['_name_'] in ['ODE_Lorenz', 'PDE_KS']:
-        train_data, test_data = load_dataset(experiment_configs['dataset']['_name_'], experiment_configs['dataset']['variant'])
+        outputs = dict()
+        outputs['reconstructions'] = dict()
+        outputs['forecasts'] = dict()
 
         lag = experiment_configs['dataset']['size'][0]
         horizon = experiment_configs['dataset']['size'][2]
 
-        train_data = torch.tensor((train_data.T))
-        test_data = torch.tensor((test_data.T))
+        # Generate reconstructions
+        for matrix_id in args.reconstruct_ids:
+            # Get input data to initialize spacetime
+            data_mat = load_dataset_split(args.dataset, 'train', matrix_id)
+            data_mat = torch.tensor((data_mat.T))
+            data_mat = data_mat[0:lag,:]
+            # Generate the rest of the output
+            # alexey: replace 10 with test_mat_shape[0] - args.seq_length
+            output_mat = forecast_model(model, start_mat=data_mat, config=args,
+                                            n_out=10, 
+                                            input_transform=input_transform, 
+                                            output_transform=output_transform)
+            # Save output
+            output_mat = np.asarray(output_mat.detach().cpu()).T
+            data_mat = np.asarray(data_mat.squeeze().T)
+            output_mat = np.concatenate([data_mat, output_mat], axis=1)
+            outputs['reconstructions'][f'{matrix_id}'] = output_mat
 
-        pred_mat = forecast_model(model, start_mat=train_data[-lag:,:], config=args,
-                                        n_out=test_data.shape[0], 
-                                        input_transform=input_transform, 
-                                        output_transform=output_transform)
-
-        pred_mat = np.asarray(pred_mat).T
+        # Generate forecasts
+        for matrix_id, output_timesteps in zip(args.forecast_ids, args.forecast_lengths):
+            # Get input data to initialize spacetime
+            data_mat = load_dataset_split(args.dataset, 'train', matrix_id)
+            data_mat = torch.tensor((data_mat.T))
+            data_mat = data_mat[-lag:,:]
+            # Generate the rest of the output
+            # alexey: replace 10 with output_timesteps
+            output_mat = forecast_model(model, start_mat=data_mat, config=args,
+                                            n_out=10, 
+                                            input_transform=input_transform, 
+                                            output_transform=output_transform)
+            # Save output
+            output_mat = np.asarray(output_mat.detach().cpu()).T
+            outputs['reconstructions'][f'{matrix_id}'] = output_mat
 
         # Make tmp output dir
         (file_dir / 'tmp_pred').mkdir(exist_ok=True)
 
         # Save file
-        np.save(file_dir / 'tmp_pred' / 'pred_mat.npy', pred_mat)
+        torch.save(outputs, file_dir / 'tmp_pred' / 'results.torch')
+
+
+        if 0:
+            train_data, test_data = load_dataset(experiment_configs['dataset']['_name_'], experiment_configs['dataset']['variant'])
+
+            lag = experiment_configs['dataset']['size'][0]
+            horizon = experiment_configs['dataset']['size'][2]
+
+            train_data = torch.tensor((train_data.T))
+            test_data = torch.tensor((test_data.T))
+
+            pred_mat = forecast_model(model, start_mat=train_data[-lag:,:], config=args,
+                                            n_out=test_data.shape[0], 
+                                            input_transform=input_transform, 
+                                            output_transform=output_transform)
+
+            pred_mat = np.asarray(pred_mat).T
+
+            # Make tmp output dir
+            (file_dir / 'tmp_pred').mkdir(exist_ok=True)
+
+            # Save file
+            np.save(file_dir / 'tmp_pred' / 'pred_mat.npy', pred_mat)
 
                      
     
