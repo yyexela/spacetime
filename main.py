@@ -209,7 +209,7 @@ def main():
                                             output_transform=output_transform)
             # Save output
             output_mat = np.asarray(output_mat.detach().cpu()).T
-            outputs['reconstructions'][f'{matrix_id}'] = output_mat
+            outputs['forecasts'][f'{matrix_id}'] = output_mat
 
         # Make tmp output dir
         (file_dir / 'tmp_pred').mkdir(exist_ok=True)
