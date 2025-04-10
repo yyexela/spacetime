@@ -27,10 +27,19 @@ def get_dataloader_config(args, config_dir='./configs'):
 # Update configs from argparse args
 # ---------------------------------
 def update_dataset_config_from_args(config, args):
-    if args.dataset_type in ['informer', 'ctf']:
+    if args.dataset_type in ['informer']:
         config.size = [args.lag, args.horizon, args.horizon]
         config.features = args.features
         config.variant = args.variant
+        config.scale = not args.no_scale
+        config.inverse = args.inverse
+    elif args.dataset_type in ['ctf']:
+        config.size = [args.lag, args.horizon, args.horizon]
+        config.features = args.features
+        config.train_ids = args.train_ids
+        config.reconstruct_ids = args.reconstruct_ids
+        config.forecast_ids = args.forecast_ids
+        config.forecast_lengths = args.forecast_lengths
         config.scale = not args.no_scale
         config.inverse = args.inverse
     else:

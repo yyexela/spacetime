@@ -1,6 +1,7 @@
 import os
 import yaml
 import time
+import torch
 import argparse
 import datetime
 import numpy as np
@@ -51,80 +52,86 @@ def main(config_path: str) -> None:
     applicable_plots = get_applicable_plots(dataset_name)
 
     # Process each sub-dataset
-    for pair_id in pair_ids:
-        # Prepare command
-        cmd = \
-        """\
-        python\
-        {spacetime_main_path}\
-        --dataset {dataset}\
-        --variant {variant}\
-        --lag {lag}\
-        --horizon {horizon}\
-        --embedding_config {embedding_config}\
-        --encoder_config {encoder_config}\
-        --decoder_config {decoder_config}\
-        --output_config {output_config}\
-        --n_blocks {n_blocks}\
-        --kernel_dim {kernel_dim}\
-        --norm_order {norm_order}\
-        --batch_size {batch_size}\
-        --dropout {dropout}\
-        --lr {lr}\
-        --weight_decay {weight_decay}\
-        --max_epochs {max_epochs}\
-        --early_stopping_epochs {early_stopping_epochs}\
-        --data_transform {data_transform}\
-        --loss {loss}\
-        --val_metric {val_metric}\
-        --criterion_weights {criterion_weights}\
-        --seed {seed}\
-        {no_wandb}\
-        """
+    # Prepare command
+    cmd = \
+    """\
+    python\
+    {spacetime_main_path}\
+    --dataset {dataset}\
+    --train_ids {train_ids}\
+    --reconstruct_ids {reconstruct_ids}\
+    --forecast_ids {forecast_ids}\
+    --forecast_lengths {forecast_lengths}\
+    --lag {lag}\
+    --horizon {horizon}\
+    --embedding_config {embedding_config}\
+    --encoder_config {encoder_config}\
+    --decoder_config {decoder_config}\
+    --output_config {output_config}\
+    --n_blocks {n_blocks}\
+    --kernel_dim {kernel_dim}\
+    --norm_order {norm_order}\
+    --batch_size {batch_size}\
+    --dropout {dropout}\
+    --lr {lr}\
+    --weight_decay {weight_decay}\
+    --max_epochs {max_epochs}\
+    --early_stopping_epochs {early_stopping_epochs}\
+    --data_transform {data_transform}\
+    --loss {loss}\
+    --val_metric {val_metric}\
+    --criterion_weights {criterion_weights}\
+    --seed {seed}\
+    {no_wandb}\
+    """
 
-        cmd_formatted = cmd.format(
-            spacetime_main_path = file_dir / "main.py",
-            dataset=config['dataset']['name'],
-            variant=pair_id,
-            lag=config['model']['lag'],
-            horizon=config['model']['horizon'],
-            embedding_config=config['model']['embedding_config'],
-            encoder_config=config['model']['encoder_config'],
-            decoder_config=config['model']['decoder_config'],
-            output_config=config['model']['output_config'],
-            n_blocks=config['model']['n_blocks'],
-            kernel_dim=config['model']['kernel_dim'],
-            norm_order=config['model']['norm_order'],
-            batch_size=config['model']['batch_size'],
-            dropout=config['model']['dropout'],
-            lr=config['model']['lr'],
-            weight_decay=config['model']['weight_decay'],
-            max_epochs=config['model']['max_epochs'],
-            early_stopping_epochs=config['model']['early_stopping_epochs'],
-            data_transform=config['model']['data_transform'],
-            loss=config['model']['loss'],
-            val_metric=config['model']['val_metric'],
-            criterion_weights=f"{config['model']['criterion_weights'][0]} {config['model']['criterion_weights'][1]} {config['model']['criterion_weights'][2]}",
-            seed=config['model']['seed'],
-            no_wandb="--no_wandb" if config['model']['no_wandb'] else "",
-        )
+    cmd_formatted = cmd.format(
+        spacetime_main_path = file_dir / "main.py",
+        dataset=config['dataset']['name'],
+        train_ids = ' '.join([str(i) for i in config['dataset']['train_ids']]),
+        reconstruct_ids = ' '.join([str(i) for i in config['dataset']['reconstruct_ids']]),
+        forecast_ids = ' '.join([str(i) for i in config['dataset']['forecast_ids']]),
+        forecast_lengths = ' '.join([str(i) for i in config['dataset']['forecast_lengths']]),
+        lag=config['model']['lag'],
+        horizon=config['model']['horizon'],
+        embedding_config=config['model']['embedding_config'],
+        encoder_config=config['model']['encoder_config'],
+        decoder_config=config['model']['decoder_config'],
+        output_config=config['model']['output_config'],
+        n_blocks=config['model']['n_blocks'],
+        kernel_dim=config['model']['kernel_dim'],
+        norm_order=config['model']['norm_order'],
+        batch_size=config['model']['batch_size'],
+        dropout=config['model']['dropout'],
+        lr=config['model']['lr'],
+        weight_decay=config['model']['weight_decay'],
+        max_epochs=config['model']['max_epochs'],
+        early_stopping_epochs=config['model']['early_stopping_epochs'],
+        data_transform=config['model']['data_transform'],
+        loss=config['model']['loss'],
+        val_metric=config['model']['val_metric'],
+        criterion_weights=f"{config['model']['criterion_weights'][0]} {config['model']['criterion_weights'][1]} {config['model']['criterion_weights'][2]}",
+        seed=config['model']['seed'],
+        no_wandb="--no_wandb" if config['model']['no_wandb'] else "",
+    )
 
-        # Execute command
-        print("---------------")
-        print("Python running:")
-        print(cmd_formatted)
-        print("---------------")
+    # Execute command
+    print("---------------")
+    print("Python running:")
+    print(cmd_formatted)
+    print("---------------")
 
-        out = os.system(cmd_formatted)
-        time.sleep(1) # to allow for ctrl+c
+    out = os.system(cmd_formatted)
+    time.sleep(1) # to allow for ctrl+c
 
-        print("---------------")
-        print(f"Returned: {out}")
-        print("---------------")
+    print("---------------")
+    print(f"Returned: {out}")
+    print("---------------")
 
-        # Load predictions
-        pred_data = np.load(file_dir / 'tmp_pred' / 'pred_mat.npy')
+    # Load predictions
+    pred_data = torch.load(file_dir / 'tmp_pred' / 'results.torch', weights_only=False)
 
+    if 0: # Waiting on Philippe
         # Load test data
         _, test_data = load_dataset(dataset_name, pair_id)
 

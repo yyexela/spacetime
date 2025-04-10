@@ -44,7 +44,11 @@ def get_data_module(args):
         args.dataset_type = "ctf"
         # args.variant: needs to be matrix ID, like 3 for X3
         print(f'Dataset type: {args.dataset_type}')
-        print(f'-> dataset: {args.dataset}{args.variant}')
+        print(f'-> dataset: {args.dataset}')
+        print(f'-> train_ids: {args.train_ids}')
+        print(f'-> reconstruct_ids: {args.reconstruct_ids}')
+        print(f'-> forecast_ids: {args.forecast_ids}')
+        print(f'-> forecast_lengths: {args.forecast_lengths}')
         data_module = args.dataset_type
         
     else:

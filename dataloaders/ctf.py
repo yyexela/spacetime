@@ -1,5 +1,6 @@
 from typing import List
 import os
+import bisect
 import numpy as np
 import pandas as pd
 from pandas.tseries import offsets
@@ -11,6 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.io import loadmat
 from dataloaders.datasets import SequenceDataset, default_data_path
+from ctf4science.data_module import load_dataset_split
 
 def load_dataset_raw(dataset, matrix):
     """
@@ -84,8 +86,8 @@ class CTFSequenceDataset(SequenceDataset):
     def l_output(self):
         return self.dataset_train.pred_len
 
-    def _get_data_filename(self, variant):
-        return self.variants[variant]
+    def _get_data_filename(self, matrix_id):
+        return self.names[matrix_id]
 
     @staticmethod
     def collate_fn(batch, resolution, **kwargs):
@@ -98,31 +100,30 @@ class CTFSequenceDataset(SequenceDataset):
     def setup(self):
         self.data_dir = default_data_path.parent.parent.parent.parent / 'data' / self._name_ / 'train'
 
-        self.dataset_train = self._dataset_cls(
-            root_path=self.data_dir,
+        self.dataset_train = _Dataset_CTF(
+            name=self._name_,
             flag="train",
             size=self.size,
-            data_path=self._get_data_filename(self.variant),
             scale=self.scale,
             inverse=self.inverse,
+            matrix_ids=self.train_ids,
         )
 
-        self.dataset_val = self._dataset_cls(
-            root_path=self.data_dir,
+        self.dataset_val = _Dataset_CTF(
+            name=self._name_,
             flag="val",
             size=self.size,
-            data_path=self._get_data_filename(self.variant),
             scale=self.scale,
             inverse=self.inverse,
+            matrix_ids=self.train_ids,
         )
 
-        self.dataset_test = self._dataset_cls(
-            root_path=self.data_dir,
+        self.dataset_test = _Dataset_CTF(
+            name=self._name_,
             flag="test",
-            size=self.size,
-            data_path=self._get_data_filename(self.variant),
             scale=self.scale,
             inverse=self.inverse,
+            matrix_ids=self.train_ids,
         )
 
         # alexey
@@ -141,12 +142,12 @@ class CTFSequenceDataset(SequenceDataset):
 class CTFDataset(Dataset):
     def __init__(
         self,
-        root_path,
+        name=None,
         flag="train",
         size=None,
-        data_path="",
         scale=True,
         inverse=False,
+        matrix_ids=None,
     ):
         # size [seq_len, label_len, pred_len]
         # info
@@ -161,6 +162,7 @@ class CTFDataset(Dataset):
         # init
         assert flag in ["train", "test", "val"]
         type_map = {"train": 0, "val": 1, "test": 2}
+        self.name = name
         self.flag = flag
         self.set_type = type_map[flag]
 
@@ -168,18 +170,17 @@ class CTFDataset(Dataset):
         self.inverse = inverse
         self.forecast_horizon = self.pred_len
 
-        self.root_path = root_path
-        self.data_path = data_path
+        self.matrix_ids = matrix_ids
         self.__read_data__()
         
         # if data_path == 'national_illness.csv':
         #     breakpoint()
 
     def _borders(self, df_raw):
-        num_train = int(len(df_raw) * 0.8)
-        num_vali = len(df_raw) - num_train
-        border1s = [0, num_train - self.seq_len, len(df_raw) - self.seq_len]
-        border2s = [num_train, num_train + num_vali, len(df_raw)]
+        num_train = int(len(df_raw)) # 100% of training
+        num_vali = len(df_raw) - int(len(df_raw) * 0.8) # 20% of training for validation
+        border1s = [0, num_train - num_vali, 0] # 0% for testing
+        border2s = [num_train, num_train, 0]
 
         # alexey
         #print("borders:")
@@ -188,80 +189,97 @@ class CTFDataset(Dataset):
         return border1s, border2s
 
     def __read_data__(self):
+        self.lens = list()
+        self.start_idxs = list()
+        self.end_idxs = list()
+        self.data_x = list()
+        self.data_y = list()
+        self.data_stamp = list()
         self.scaler = StandardScaler()
 
-        train_mat = loadmat(self.root_path / self.data_path)
-        train_mat = train_mat[list(train_mat.keys())[-1]]
-        test_mat = loadmat(self.root_path / self.data_path)
-        test_mat = test_mat[list(test_mat.keys())[-1]]
-
-        train_mat = np.swapaxes(train_mat, 0, 1)
-        test_mat = np.swapaxes(test_mat, 0, 1)
-
-        train_mat = torch.Tensor(train_mat.astype(np.float32))
-        test_mat = torch.Tensor(test_mat.astype(np.float32))
-
-        df_data = pd.DataFrame(train_mat)
-
-        border1s, border2s = self._borders(df_data)
-        border1 = border1s[self.set_type]
-        border2 = border2s[self.set_type]
-
+        # Set up scaler on all data first
         if self.scale:
-            train_data = df_data[border1s[0] : border2s[0]]
-            self.scaler.fit(train_data.values)
-            data = self.scaler.transform(df_data.values)  # Scaled down, should not be Y
-        else:
-            data = df_data.values
+            all_data = list()
+            for matrix_id in self.matrix_ids:
+                data_mat = load_dataset_split(self.name, 'train', matrix_id)
+                data_mat = np.swapaxes(data_mat, 0, 1)
+                data_mat = torch.Tensor(data_mat.astype(np.float32))
 
-        self.data_x = data[border1:border2]
-        if self.inverse:
-            self.data_y = df_data.values[border1:border2]
-        else:
-            self.data_y = data[border1:border2]
+                border1s, border2s = self._borders(data_mat)
+                border1 = border1s[self.set_type]
+                border2 = border2s[self.set_type]
 
-        self.data_stamp = np.arange(0,df_data.shape[0]).reshape(-1,1)
+                train_data = data_mat[border1s[0] : border2s[0]]
+                all_data.append(train_data)
+            all_data = torch.cat(all_data)
+            df_data = pd.DataFrame(all_data)
+            self.scaler.fit(df_data.values)
+
+        for matrix_id in self.matrix_ids:
+            data_mat = load_dataset_split(self.name, 'train', matrix_id)
+            data_mat = np.swapaxes(data_mat, 0, 1)
+            data_mat = torch.Tensor(data_mat.astype(np.float32))
+            df_data = pd.DataFrame(data_mat)
+
+            border1s, border2s = self._borders(df_data)
+            border1 = border1s[self.set_type]
+            border2 = border2s[self.set_type]
+
+            if self.scale:
+                data = self.scaler.transform(df_data.values)  # Scaled down, should not be Y
+            else:
+                data = df_data.values
+
+            self.data_x.append(data[border1:border2])
+            if self.inverse:
+                self.data_y.append(df_data.values[border1:border2])
+            else:
+                self.data_y.append(data[border1:border2])
+
+            self.data_stamp.append(np.arange(0,df_data.shape[0]).reshape(-1,1))
+
+            data_len = self.data_x[-1].shape[0]
+            self.lens.append(data_len - self.seq_len - self.pred_len + 1)
+
+            if len(self.start_idxs) == 0:
+                self.start_idxs.append(0)
+            else:
+                self.start_idxs.append(self.end_idxs[-1]+1)
+            if len(self.end_idxs) == 0:
+                self.end_idxs.append(self.lens[-1]-1)
+            else:
+                self.end_idxs.append(self.start_idxs[-1]+self.lens[-1]-1)
 
         # alexey
         #print(f"set type {self.set_type} x {self.data_x.shape} y {self.data_y.shape}")
 
     def __getitem__(self, index):
-        s_begin = index
-        s_end = s_begin + self.seq_len
-        r_begin = s_end - self.label_len
-        r_end = r_begin + self.label_len + self.pred_len
+        # Get appropriate matrix data
+        matrix_idx = bisect.bisect_right(self.start_idxs, index)-1
+        data_x = self.data_x[matrix_idx]
+        data_y = self.data_y[matrix_idx]
+        data_stamp = self.data_stamp[matrix_idx]
 
-        seq_x = self.data_x[s_begin:s_end]
+        # Do normal __get_item__
+        s_begin = index - self.start_idxs[matrix_idx]
+        s_end = s_begin + self.seq_len
+        r_end = s_end + self.pred_len
+
+        seq_x = data_x[s_begin:s_end]
         seq_x = np.concatenate(
-            [seq_x, np.zeros((self.pred_len, self.data_x.shape[-1]))], axis=0
+            [seq_x, np.zeros((self.pred_len, data_x.shape[-1]))], axis=0
         )
 
         if self.inverse:
-            # seq_y = np.concatenate(
-            #     [
-            #         self.data_x[r_begin : r_begin + self.label_len],
-            #         self.data_y[r_begin + self.label_len : r_end],
-            #     ],
-            #     0,
-            # )
-            # raise NotImplementedError   # OLD in S4 codebase
-            seq_y = self.data_y[s_end:r_end]
+            seq_y = data_y[s_end:r_end]
         else:
-            # seq_y = self.data_y[r_begin:r_end] # OLD in Informer codebase
-            seq_y = self.data_y[s_end:r_end]
+            seq_y = data_y[s_end:r_end]
 
-        # OLD in Informer codebase
-        # seq_x_mark = self.data_stamp[s_begin:s_end]
-        # seq_y_mark = self.data_stamp[r_begin:r_end]
-
-        mark = self.data_stamp[s_begin:s_end]
+        mark = data_stamp[s_begin:s_end]
         mark = np.concatenate([mark, np.zeros((self.pred_len, mark.shape[-1]))], axis=0)
 
         mask = np.concatenate([np.zeros(self.seq_len), np.zeros(self.pred_len)], axis=0)
         mask = mask[:, None]
-
-        # Add the mask to the timestamps: # 480, 5
-        # mark = np.concatenate([mark, mask[:, np.newaxis]], axis=1)
 
         seq_x = seq_x.astype(np.float32)
         seq_y = seq_y.astype(np.float32)
@@ -273,9 +291,10 @@ class CTFDataset(Dataset):
     def __len__(self):
         # alexey
         #print(f"len for set type {self.set_type} is {len(self.data_x) - self.seq_len - self.pred_len + 1}")
-        return len(self.data_x) - self.seq_len - self.pred_len + 1
+        return sum(self.lens)
 
     def inverse_transform(self, data, loc=None):
+        # Need to do inverse scaling for each training matrix
         return self.scaler.inverse_transform(data, loc)
 
     @property
@@ -314,13 +333,10 @@ class _Dataset_CTF(CTFDataset):
 class PDE_KD(CTFSequenceDataset):
     _name_ = "PDE_KS"
 
-    _dataset_cls = _Dataset_CTF
-
     init_defaults = {
         "size": None,
         "features": "S",
         "target": "OT",
-        "variant": 0,
         "scale": True,
         "inverse": False,
         "timeenc": 0,
@@ -328,7 +344,7 @@ class PDE_KD(CTFSequenceDataset):
         "cols": None,
     }
 
-    variants = {
+    names = {
         1: "X1train.mat",
         2: "X2train.mat",
         3: "X3train.mat",
@@ -344,11 +360,8 @@ class PDE_KD(CTFSequenceDataset):
 class PDE_KS(CTFSequenceDataset):
     _name_ = "PDE_KS"
 
-    _dataset_cls = _Dataset_CTF
-
     init_defaults = {
         "size": None,
-        "variant": 0,
         "scale": True,
         "inverse": False,
         "timeenc": 0,
@@ -356,7 +369,7 @@ class PDE_KS(CTFSequenceDataset):
         "cols": None,
     }
 
-    variants = {
+    names = {
         1: "X1train.mat",
         2: "X2train.mat",
         3: "X3train.mat",
@@ -372,11 +385,8 @@ class PDE_KS(CTFSequenceDataset):
 class ODE_Lorenz(CTFSequenceDataset):
     _name_ = "ODE_Lorenz"
 
-    _dataset_cls = _Dataset_CTF
-
     init_defaults = {
         "size": None,
-        "variant": 0,
         "scale": True,
         "inverse": False,
         "timeenc": 0,
@@ -384,7 +394,7 @@ class ODE_Lorenz(CTFSequenceDataset):
         "cols": None,
     }
 
-    variants = {
+    names = {
         1: "X1train.mat",
         2: "X2train.mat",
         3: "X3train.mat",

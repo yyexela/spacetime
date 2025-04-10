@@ -50,6 +50,12 @@ def initialize_args():
     parser.add_argument('--inverse', action='store_true', default=False)
     parser.add_argument('--data_transform', type=str, default='mean',
                         choices=['mean', 'mean_input', 'last', 'standardize', 'none'])
+
+    ## CTF specific
+    parser.add_argument("--train_ids", default=None, nargs="+", type=int) # Matrices X1 through X10, enter a list of integers
+    parser.add_argument("--reconstruct_ids", nargs="+", default=None, type=int) # Matrix X1 through X10, enter list of integers
+    parser.add_argument("--forecast_ids", nargs="+", default=None, type=int) # Matrix X1 through X10, enter list of integers
+    parser.add_argument("--forecast_lengths", nargs="+", default=None, type=int) # Length of forecasts, argument must be same length as forecast_ids
     
     # Prediction Task
     parser.add_argument('--lag', type=int, default=1, 
