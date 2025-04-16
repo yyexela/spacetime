@@ -72,7 +72,7 @@ def main(config_path: str) -> None:
         'batch_id': batch_id,
         'model': model_name,
         'dataset': dataset_name,
-        'sub_datasets': []
+        'pairs': []
     }
 
     # Initialize Visualization object
@@ -244,7 +244,7 @@ def main(config_path: str) -> None:
         # Append metrics to batch results
         # Convert metric values to plain Python floats for YAML serialization
         results_for_yaml = {key: float(value) for key, value in results.items()}
-        batch_results['sub_datasets'].append({
+        batch_results['pairs'].append({
             'pair_id': pair_id,
             'metrics': results
         })
