@@ -53,9 +53,11 @@ def initialize_args():
 
     ## CTF specific
     parser.add_argument("--train_ids", default=None, nargs="+", type=int) # Matrices X1 through X10, enter a list of integers
-    parser.add_argument("--reconstruct_ids", nargs="+", default=None, type=int) # Matrix X1 through X10, enter list of integers
-    parser.add_argument("--forecast_ids", nargs="+", default=None, type=int) # Matrix X1 through X10, enter list of integers
-    parser.add_argument("--forecast_lengths", nargs="+", default=None, type=int) # Length of forecasts, argument must be same length as forecast_ids
+    parser.add_argument("--pair_id", default=None, type=int) # Integer
+    parser.add_argument("--reconstruct_id", default=None, type=int) # Matrix X1 through X10, enter integer
+    parser.add_argument("--forecast_id", default=None, type=int) # Matrix X1 through X10, enter integer
+    parser.add_argument("--forecast_length", default=None, type=int) # Length of forecast
+    parser.add_argument("--burn_in", action='store_true') # Use provided forecast_id matrix as part of output
     
     # Prediction Task
     parser.add_argument('--lag', type=int, default=1, 

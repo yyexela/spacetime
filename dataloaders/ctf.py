@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.io import loadmat
 from dataloaders.datasets import SequenceDataset, default_data_path
-from ctf4science.data_module import load_dataset_split
+from ctf4science.data_module import load_dataset
 
 def load_dataset_raw(dataset, matrix):
     """
@@ -86,9 +86,6 @@ class CTFSequenceDataset(SequenceDataset):
     def l_output(self):
         return self.dataset_train.pred_len
 
-    def _get_data_filename(self, matrix_id):
-        return self.names[matrix_id]
-
     @staticmethod
     def collate_fn(batch, resolution, **kwargs):
         x, y, *z = zip(*batch)
@@ -106,7 +103,7 @@ class CTFSequenceDataset(SequenceDataset):
             size=self.size,
             scale=self.scale,
             inverse=self.inverse,
-            matrix_ids=self.train_ids,
+            pair_id=self.pair_id,
         )
 
         self.dataset_val = _Dataset_CTF(
@@ -115,7 +112,7 @@ class CTFSequenceDataset(SequenceDataset):
             size=self.size,
             scale=self.scale,
             inverse=self.inverse,
-            matrix_ids=self.train_ids,
+            pair_id=self.pair_id,
         )
 
         self.dataset_test = _Dataset_CTF(
@@ -123,7 +120,7 @@ class CTFSequenceDataset(SequenceDataset):
             flag="test",
             scale=self.scale,
             inverse=self.inverse,
-            matrix_ids=self.train_ids,
+            pair_id=self.pair_id,
         )
 
         # alexey
@@ -147,7 +144,7 @@ class CTFDataset(Dataset):
         size=None,
         scale=True,
         inverse=False,
-        matrix_ids=None,
+        pair_id=None,
     ):
         # size [seq_len, label_len, pred_len]
         # info
@@ -170,7 +167,7 @@ class CTFDataset(Dataset):
         self.inverse = inverse
         self.forecast_horizon = self.pred_len
 
-        self.matrix_ids = matrix_ids
+        self.pair_id = pair_id
         self.__read_data__()
         
         # if data_path == 'national_illness.csv':
@@ -200,8 +197,8 @@ class CTFDataset(Dataset):
         # Set up scaler on all data first
         if self.scale:
             all_data = list()
-            for matrix_id in self.matrix_ids:
-                data_mat = load_dataset_split(self.name, 'train', matrix_id)
+            data_mats, _, _ = load_dataset(self.name, self.pair_id)
+            for i, data_mat in enumerate(data_mats):
                 data_mat = np.swapaxes(data_mat, 0, 1)
                 data_mat = torch.Tensor(data_mat.astype(np.float32))
 
@@ -215,8 +212,7 @@ class CTFDataset(Dataset):
             df_data = pd.DataFrame(all_data)
             self.scaler.fit(df_data.values)
 
-        for matrix_id in self.matrix_ids:
-            data_mat = load_dataset_split(self.name, 'train', matrix_id)
+        for i, data_mat in enumerate(data_mats):
             data_mat = np.swapaxes(data_mat, 0, 1)
             data_mat = torch.Tensor(data_mat.astype(np.float32))
             df_data = pd.DataFrame(data_mat)

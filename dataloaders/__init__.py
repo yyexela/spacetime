@@ -45,10 +45,12 @@ def get_data_module(args):
         # args.variant: needs to be matrix ID, like 3 for X3
         print(f'Dataset type: {args.dataset_type}')
         print(f'-> dataset: {args.dataset}')
+        print(f'-> pair_id: {args.pair_id}')
         print(f'-> train_ids: {args.train_ids}')
-        print(f'-> reconstruct_ids: {args.reconstruct_ids}')
-        print(f'-> forecast_ids: {args.forecast_ids}')
-        print(f'-> forecast_lengths: {args.forecast_lengths}')
+        print(f'-> reconstruct_id: {args.reconstruct_id}')
+        print(f'-> forecast_id: {args.forecast_id}')
+        print(f'-> forecast_length: {args.forecast_length}')
+        print(f'-> burn_in: {args.burn_in}')
         data_module = args.dataset_type
         
     else:

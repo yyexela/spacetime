@@ -37,9 +37,11 @@ def update_dataset_config_from_args(config, args):
         config.size = [args.lag, args.horizon, args.horizon]
         config.features = args.features
         config.train_ids = args.train_ids
-        config.reconstruct_ids = args.reconstruct_ids
-        config.forecast_ids = args.forecast_ids
-        config.forecast_lengths = args.forecast_lengths
+        config.pair_id = args.pair_id
+        config.reconstruct_id = args.reconstruct_id
+        config.forecast_id = args.forecast_id
+        config.forecast_length = args.forecast_length
+        config.burn_in = args.burn_in
         config.scale = not args.no_scale
         config.inverse = args.inverse
     else:
