@@ -243,7 +243,6 @@ def main(config_path: str) -> None:
 
         # Append metrics to batch results
         # Convert metric values to plain Python floats for YAML serialization
-        results_for_yaml = {key: float(value) for key, value in results.items()}
         batch_results['pairs'].append({
             'pair_id': pair_id,
             'metrics': results
