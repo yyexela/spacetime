@@ -180,7 +180,7 @@ def main():
         # Generate reconstructions
         if args.reconstruct_id is not None:
             # Get input data to initialize spacetime
-            train_mats, _, _ = load_dataset(args.dataset, args.pair_id)
+            train_mats, _ = load_dataset(args.dataset, args.pair_id)
             data_mat = train_mats[args.train_ids.index(args.reconstruct_id)]
             output_timesteps = data_mat.shape[1] - lag
             data_mat = torch.tensor((data_mat.T))
@@ -198,7 +198,7 @@ def main():
         # Generate forecasts
         if args.forecast_id is not None:
             # Get input data to initialize spacetime
-            train_mats, _, init_mat = load_dataset(args.dataset, args.pair_id)
+            train_mats, init_mat = load_dataset(args.dataset, args.pair_id)
             if args.burn_in:
                 data_mat = init_mat
             else:

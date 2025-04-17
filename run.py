@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import List, Dict, Any
 from ctf4science.eval_module import evaluate, save_results
 from ctf4science.visualization_module import Visualization
-from ctf4science.data_module import load_dataset, parse_pair_ids, get_applicable_plots
+from ctf4science.data_module import parse_pair_ids, get_applicable_plots, get_prediction_timesteps
 
 # file dir
 file_dir = Path(__file__).parent
@@ -123,7 +123,7 @@ def main(config_path: str) -> None:
                 pair_id = pair_id,
                 train_ids = ' '.join([str(i) for i in id_dict[pair_id]["train_ids"]]),
                 forecast_id = id_dict[pair_id]["forecast_id"],
-                forecast_length = id_dict[pair_id]["forecast_length"],
+                forecast_length = get_prediction_timesteps(dataset_name, pair_id).shape[0],
                 lag=config['model']['lag'],
                 horizon=config['model']['horizon'],
                 embedding_config=config['model']['embedding_config'],
@@ -232,11 +232,8 @@ def main(config_path: str) -> None:
         # Load predictions
         pred_data = torch.load(file_dir / 'tmp_pred' / 'output_mat.torch', weights_only=False)
 
-        # Load test data
-        _, test_data, _ = load_dataset(dataset_name, pair_id)
-
         # Evaluate predictions using default metrics
-        results = evaluate(dataset_name, pair_id, test_data, pred_data)
+        results = evaluate(dataset_name, pair_id, pred_data)
 
         # Save results for this sub-dataset and get the path to the results directory
         results_directory = save_results(dataset_name, model_name, batch_id, pair_id, config, pred_data, results)
@@ -251,7 +248,7 @@ def main(config_path: str) -> None:
         # Generate and save visualizations that are applicable to this dataset
         for plot_type in applicable_plots:
             fig = viz.plot_from_batch(dataset_name, pair_id, results_directory, plot_type=plot_type)
-            viz.save_figure_results(fig, dataset_name, model_name, batch_id, pair_id, plot_type)
+            viz.save_figure_results(fig, dataset_name, model_name, batch_id, pair_id, plot_type, results_directory)
 
         # Save aggregated batch results
         with open(results_directory.parent / 'batch_results.yaml', 'w') as f:
