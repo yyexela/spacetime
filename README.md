@@ -8,6 +8,19 @@
 - Length of each of validation, testing, and training datasets need to be larger than batch size
 - Skip testing dataset
 
+Environment:
+```bash
+pyenv install 3.9
+pyenv local 3.9
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+Hyperparameter optimization:
+- `python optimize_parameters.py tuning_config/config_KS.yaml`
+- `python optimize_parameters.py tuning_config/config_Lorenz.yaml`
+
 # SpaceTime 🌌⏱️
 
 Code for SpaceTime, a neural net architecture for time series. Named after state-**space** models for **time** series forecasting and classification.
