@@ -52,6 +52,7 @@ def initialize_args():
                         choices=['mean', 'mean_input', 'last', 'standardize', 'none'])
 
     ## CTF specific
+    parser.add_argument("--validation", action='store_true') # Use validation data
     parser.add_argument("--train_ids", default=None, nargs="+", type=int) # Matrices X1 through X10, enter a list of integers
     parser.add_argument("--pair_id", default=None, type=int) # Integer
     parser.add_argument("--reconstruct_id", default=None, type=int) # Matrix X1 through X10, enter integer

@@ -24,7 +24,7 @@ from setup.configs.model import update_output_config_from_args  # For multivaria
 
 from model.network import SpaceTime
 
-from ctf4science.data_module import load_dataset
+from ctf4science.data_module import load_dataset, load_validation_dataset, get_prediction_timesteps, get_validation_prediction_timesteps
 
 file_dir = Path(__file__).parent
 
@@ -48,6 +48,7 @@ def main():
     print_config(experiment_configs['scheduler'])
     
     # Loading Data
+    experiment_configs['dataset']['validation'] = args.validation
     dataloaders = load_data(experiment_configs['dataset'], 
                             experiment_configs['loader'])
     train_loader, val_loader, _ = dataloaders
@@ -178,11 +179,15 @@ def main():
         horizon = experiment_configs['dataset']['size'][2]
 
         # Generate reconstructions
-        if args.reconstruct_id is not None:
+        if args.pair_id in [2, 4]:
             # Get input data to initialize spacetime
-            train_mats, _ = load_dataset(args.dataset, args.pair_id)
-            data_mat = train_mats[args.train_ids.index(args.reconstruct_id)]
-            output_timesteps = data_mat.shape[1] - lag
+            if args.validation:
+                train_mats, init_data = load_validation_dataset(args.dataset, args.pair_id)
+                output_timesteps = get_validation_prediction_timesteps(args.dataset, args.pair_id).shape[0] - lag
+            else:
+                train_mats, init_data = load_dataset(args.dataset, args.pair_id)
+                output_timesteps = get_prediction_timesteps(args.dataset, args.pair_id).shape[0] - lag
+            data_mat = train_mats[0]
             data_mat = torch.tensor((data_mat.T))
             data_mat = data_mat[0:lag,:]
             # Generate the rest of the output
@@ -196,14 +201,25 @@ def main():
             output_mat = np.concatenate([data_mat, output_mat], axis=1)
 
         # Generate forecasts
-        if args.forecast_id is not None:
+        else:
             # Get input data to initialize spacetime
-            train_mats, init_mat = load_dataset(args.dataset, args.pair_id)
-            if args.burn_in:
-                data_mat = init_mat
+            if args.validation:
+                train_mats, init_mat = load_validation_dataset(args.dataset, args.pair_id)
+                if args.pair_id in [8,9]:
+                    data_mat = init_mat
+                    output_timesteps = get_validation_prediction_timesteps(args.dataset, args.pair_id).shape[0] - lag
+                else:
+                    data_mat = train_mats[0]
+                    output_timesteps = get_validation_prediction_timesteps(args.dataset, args.pair_id).shape[0]
             else:
-                data_mat = train_mats[args.train_ids.index(args.forecast_id)]
-            output_timesteps = args.forecast_length - data_mat.shape[1]
+                train_mats, init_mat = load_dataset(args.dataset, args.pair_id)
+                if args.pair_id in [8,9]:
+                    data_mat = init_mat
+                    output_timesteps = get_prediction_timesteps(args.dataset, args.pair_id).shape[0] - lag
+                else:
+                    data_mat = train_mats[0]
+                    output_timesteps = get_prediction_timesteps(args.dataset, args.pair_id).shape[0]
+
             data_mat = torch.tensor((data_mat.T))
             data_mat = data_mat[-lag:,:]
             # Generate the rest of the output
@@ -214,7 +230,7 @@ def main():
                                             output_transform=output_transform)
             # Save output
             output_mat = output_mat.detach().cpu()
-            if args.burn_in:
+            if args.pair_id in [8,9]:
                 output_mat = torch.cat([data_mat,output_mat])
             output_mat = np.asarray(output_mat).T
 

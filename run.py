@@ -84,134 +84,63 @@ def main(config_path: str) -> None:
     # Process each sub-dataset
     for pair_id in pair_ids:
         # Prepare command
-        if id_dict[pair_id].get('forecast_id', None) is not None:
-            cmd = \
-            """\
-            python\
-            {spacetime_main_path}\
-            --dataset {dataset}\
-            --pair_id {pair_id}\
-            --train_ids {train_ids}\
-            --forecast_id {forecast_id}\
-            --forecast_length {forecast_length}\
-            --lag {lag}\
-            --horizon {horizon}\
-            --embedding_config {embedding_config}\
-            --encoder_config {encoder_config}\
-            --decoder_config {decoder_config}\
-            --output_config {output_config}\
-            --n_blocks {n_blocks}\
-            --kernel_dim {kernel_dim}\
-            --norm_order {norm_order}\
-            --batch_size {batch_size}\
-            --dropout {dropout}\
-            --lr {lr}\
-            --weight_decay {weight_decay}\
-            --max_epochs {max_epochs}\
-            --early_stopping_epochs {early_stopping_epochs}\
-            --data_transform {data_transform}\
-            --loss {loss}\
-            --val_metric {val_metric}\
-            --criterion_weights {criterion_weights}\
-            --seed {seed}\
-            {no_wandb}\
-            """
+        cmd = \
+        """\
+        python\
+        {spacetime_main_path}\
+        --dataset {dataset}\
+        --pair_id {pair_id}\
+        --lag {lag}\
+        --horizon {horizon}\
+        --mlp_n_layers {mlp_n_layers}\
+        --embedding_config {embedding_config}\
+        --encoder_config {encoder_config}\
+        --decoder_config {decoder_config}\
+        --output_config {output_config}\
+        --n_blocks {n_blocks}\
+        --kernel_dim {kernel_dim}\
+        --norm_order {norm_order}\
+        --batch_size {batch_size}\
+        --dropout {dropout}\
+        --lr {lr}\
+        --weight_decay {weight_decay}\
+        --max_epochs {max_epochs}\
+        --early_stopping_epochs {early_stopping_epochs}\
+        --data_transform {data_transform}\
+        --loss {loss}\
+        --val_metric {val_metric}\
+        --criterion_weights {criterion_weights}\
+        --seed {seed}\
+        {no_wandb}\
+        """
 
-            cmd_formatted = cmd.format(
-                spacetime_main_path = file_dir / "main.py",
-                dataset=config['dataset']['name'],
-                pair_id = pair_id,
-                train_ids = ' '.join([str(i) for i in id_dict[pair_id]["train_ids"]]),
-                forecast_id = id_dict[pair_id]["forecast_id"],
-                forecast_length = get_prediction_timesteps(dataset_name, pair_id).shape[0],
-                lag=config['model']['lag'],
-                horizon=config['model']['horizon'],
-                embedding_config=config['model']['embedding_config'],
-                encoder_config=config['model']['encoder_config'],
-                decoder_config=config['model']['decoder_config'],
-                output_config=config['model']['output_config'],
-                n_blocks=config['model']['n_blocks'],
-                kernel_dim=config['model']['kernel_dim'],
-                norm_order=config['model']['norm_order'],
-                batch_size=config['model']['batch_size'],
-                dropout=config['model']['dropout'],
-                lr=config['model']['lr'],
-                weight_decay=config['model']['weight_decay'],
-                max_epochs=config['model']['max_epochs'],
-                early_stopping_epochs=config['model']['early_stopping_epochs'],
-                data_transform=config['model']['data_transform'],
-                loss=config['model']['loss'],
-                val_metric=config['model']['val_metric'],
-                criterion_weights=f"{config['model']['criterion_weights'][0]} {config['model']['criterion_weights'][1]} {config['model']['criterion_weights'][2]}",
-                seed=config['model']['seed'],
-                no_wandb="--no_wandb" if config['model']['no_wandb'] else "",
-            )
-
-            if id_dict[pair_id]['burn_in']:
-                cmd_formatted = cmd_formatted + " --burn_in"
-
-        elif id_dict[pair_id].get('reconstruct_id', None) is not None:
-            cmd = \
-            """\
-            python\
-            {spacetime_main_path}\
-            --dataset {dataset}\
-            --pair_id {pair_id}\
-            --train_ids {train_ids}\
-            --reconstruct_id {reconstruct_id}\
-            --lag {lag}\
-            --horizon {horizon}\
-            --embedding_config {embedding_config}\
-            --encoder_config {encoder_config}\
-            --decoder_config {decoder_config}\
-            --output_config {output_config}\
-            --n_blocks {n_blocks}\
-            --kernel_dim {kernel_dim}\
-            --norm_order {norm_order}\
-            --batch_size {batch_size}\
-            --dropout {dropout}\
-            --lr {lr}\
-            --weight_decay {weight_decay}\
-            --max_epochs {max_epochs}\
-            --early_stopping_epochs {early_stopping_epochs}\
-            --data_transform {data_transform}\
-            --loss {loss}\
-            --val_metric {val_metric}\
-            --criterion_weights {criterion_weights}\
-            --seed {seed}\
-            {no_wandb}\
-            """
-
-            cmd_formatted = cmd.format(
-                spacetime_main_path = file_dir / "main.py",
-                dataset=config['dataset']['name'],
-                pair_id = pair_id,
-                train_ids = ' '.join([str(i) for i in id_dict[pair_id]["train_ids"]]),
-                reconstruct_id = id_dict[pair_id]["reconstruct_id"],
-                lag=config['model']['lag'],
-                horizon=config['model']['horizon'],
-                embedding_config=config['model']['embedding_config'],
-                encoder_config=config['model']['encoder_config'],
-                decoder_config=config['model']['decoder_config'],
-                output_config=config['model']['output_config'],
-                n_blocks=config['model']['n_blocks'],
-                kernel_dim=config['model']['kernel_dim'],
-                norm_order=config['model']['norm_order'],
-                batch_size=config['model']['batch_size'],
-                dropout=config['model']['dropout'],
-                lr=config['model']['lr'],
-                weight_decay=config['model']['weight_decay'],
-                max_epochs=config['model']['max_epochs'],
-                early_stopping_epochs=config['model']['early_stopping_epochs'],
-                data_transform=config['model']['data_transform'],
-                loss=config['model']['loss'],
-                val_metric=config['model']['val_metric'],
-                criterion_weights=f"{config['model']['criterion_weights'][0]} {config['model']['criterion_weights'][1]} {config['model']['criterion_weights'][2]}",
-                seed=config['model']['seed'],
-                no_wandb="--no_wandb" if config['model']['no_wandb'] else "",
-            )
-        else:
-            raise Exception("Invalid configuration")
+        cmd_formatted = cmd.format(
+            spacetime_main_path = file_dir / "main.py",
+            dataset=config['dataset']['name'],
+            pair_id = pair_id,
+            lag=config['model']['lag'],
+            horizon=config['model']['horizon'],
+            mlp_n_layers=config['model']['mlp_n_layers'],
+            embedding_config=config['model']['embedding_config'],
+            encoder_config=config['model']['encoder_config'],
+            decoder_config=config['model']['decoder_config'],
+            output_config=config['model']['output_config'],
+            n_blocks=config['model']['n_blocks'],
+            kernel_dim=config['model']['kernel_dim'],
+            norm_order=config['model']['norm_order'],
+            batch_size=config['model']['batch_size'],
+            dropout=config['model']['dropout'],
+            lr=config['model']['lr'],
+            weight_decay=config['model']['weight_decay'],
+            max_epochs=config['model']['max_epochs'],
+            early_stopping_epochs=config['model']['early_stopping_epochs'],
+            data_transform=config['model']['data_transform'],
+            loss=config['model']['loss'],
+            val_metric=config['model']['val_metric'],
+            criterion_weights=f"{config['model']['criterion_weights'][0]} {config['model']['criterion_weights'][1]} {config['model']['criterion_weights'][2]}",
+            seed=config['model']['seed'],
+            no_wandb="--no_wandb" if config['model']['no_wandb'] else "",
+        )
 
         # Execute command
         print("---------------")

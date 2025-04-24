@@ -9,11 +9,12 @@ model:
   encoder_config: "encoder/default_no_skip"
   decoder_config: "decoder/default"
   output_config: "output/default"
-  n_blocks: 1
   kernel_dim: 64
   norm_order: 1
   batch_size: 50
   dropout: 0.25
+  mlp_n_layers: 2
+  n_blocks: 2
   lr: 1e-3
   weight_decay: 1e-4
   max_epochs: 2

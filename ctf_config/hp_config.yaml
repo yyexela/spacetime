@@ -1,0 +1,30 @@
+dataset:
+  name: PDE_KS
+model:
+  batch_size: 5
+  criterion_weights:
+  - 1
+  - 1
+  - 1
+  data_transform: mean
+  decoder_config: decoder/default
+  dropout: 0.1
+  early_stopping_epochs: 2
+  embedding_config: embedding/repeat
+  encoder_config: encoder/default_no_skip
+  horizon: 11
+  kernel_dim: 64
+  lag: 12
+  loss: informer_rmse
+  lr: 0.0015439927543489157
+  max_epochs: 2
+  mlp_n_layers: 1
+  n_blocks: 3
+  n_kernels: 64
+  name: spacetime
+  no_wandb: true
+  norm_order: 1
+  output_config: output/default
+  seed: 0
+  val_metric: informer_rmse
+  weight_decay: 0.0001

@@ -12,26 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.io import loadmat
 from dataloaders.datasets import SequenceDataset, default_data_path
-from ctf4science.data_module import load_dataset
-
-def load_dataset_raw(dataset, matrix):
-    """
-    Load original unprocessed dataset
-    """
-    if dataset in ["ODE_Lorenz", "PDE_KS"]:
-        train_mat = loadmat(f'../../Datasets/{dataset}/{matrix}')
-        train_mat = train_mat[list(train_mat.keys())[-1]]
-        test_mat = loadmat(f'../../Datasets/{dataset}/{matrix}')
-        test_mat = test_mat[list(test_mat.keys())[-1]]
-
-        train_mat = np.swapaxes(train_mat, 0, 1)
-        test_mat = np.swapaxes(test_mat, 0, 1)
-
-        train_mat = torch.Tensor(train_mat.astype(np.float32))
-        test_mat = torch.Tensor(test_mat.astype(np.float32))
-    else:
-        raise Exception(f"Timeseries dataset {dataset} not found")
-    return train_mat, test_mat
+from ctf4science.data_module import load_dataset, load_validation_dataset
 
 class StandardScaler:
     def __init__(self):
@@ -104,15 +85,17 @@ class CTFSequenceDataset(SequenceDataset):
             scale=self.scale,
             inverse=self.inverse,
             pair_id=self.pair_id,
+            validation=self.validation
         )
 
         self.dataset_val = _Dataset_CTF(
             name=self._name_,
-            flag="val",
+            flag="train",
             size=self.size,
             scale=self.scale,
             inverse=self.inverse,
             pair_id=self.pair_id,
+            validation=self.validation
         )
 
         self.dataset_test = _Dataset_CTF(
@@ -121,6 +104,7 @@ class CTFSequenceDataset(SequenceDataset):
             scale=self.scale,
             inverse=self.inverse,
             pair_id=self.pair_id,
+            validation=self.validation
         )
 
         # alexey
@@ -145,6 +129,7 @@ class CTFDataset(Dataset):
         scale=True,
         inverse=False,
         pair_id=None,
+        validation=False,
     ):
         # size [seq_len, label_len, pred_len]
         # info
@@ -166,6 +151,8 @@ class CTFDataset(Dataset):
         self.scale = scale
         self.inverse = inverse
         self.forecast_horizon = self.pred_len
+
+        self.validation = validation
 
         self.pair_id = pair_id
         self.__read_data__()
@@ -197,7 +184,10 @@ class CTFDataset(Dataset):
         # Set up scaler on all data first
         if self.scale:
             all_data = list()
-            data_mats, _ = load_dataset(self.name, self.pair_id)
+            if self.validation:
+                data_mats, _ = load_validation_dataset(self.name, self.pair_id)
+            else:
+                data_mats, _ = load_dataset(self.name, self.pair_id)
             for i, data_mat in enumerate(data_mats):
                 data_mat = np.swapaxes(data_mat, 0, 1)
                 data_mat = torch.Tensor(data_mat.astype(np.float32))
@@ -325,33 +315,6 @@ class _Dataset_CTF(CTFDataset):
     def n_tokens_time(self):
         assert self.freq == "h"
         return [13, 32, 7, 24]
-
-class PDE_KD(CTFSequenceDataset):
-    _name_ = "PDE_KS"
-
-    init_defaults = {
-        "size": None,
-        "features": "S",
-        "target": "OT",
-        "scale": True,
-        "inverse": False,
-        "timeenc": 0,
-        "freq": "h",
-        "cols": None,
-    }
-
-    names = {
-        1: "X1train.mat",
-        2: "X2train.mat",
-        3: "X3train.mat",
-        4: "X4train.mat",
-        5: "X5train.mat",
-        6: "X6train.mat",
-        7: "X7train.mat",
-        8: "X8train.mat",
-        9: "X9train.mat",
-        10: "X10train.mat"
-    }
 
 class PDE_KS(CTFSequenceDataset):
     _name_ = "PDE_KS"
