@@ -1,5 +1,6 @@
 dataset:
   name: PDE_KS
+  pair_id: [8]
 model:
   name: spacetime
   lag: 50
