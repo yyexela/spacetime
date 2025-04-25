@@ -15,11 +15,13 @@ pyenv local 3.9
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+cd ../../
+pip install -e .[all]
 ```
 
 Hyperparameter optimization:
-- `python optimize_parameters.py tuning_config/config_KS.yaml`
-- `python optimize_parameters.py tuning_config/config_Lorenz.yaml`
+- `python optimize_parameters.py tuning_config/config_KS_8.yaml`
+- `python optimize_parameters.py tuning_config/config_Lorenz_8.yaml`
 
 # SpaceTime 🌌⏱️
 

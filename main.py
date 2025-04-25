@@ -182,10 +182,10 @@ def main():
         if args.pair_id in [2, 4]:
             # Get input data to initialize spacetime
             if args.validation:
-                train_mats, init_data = load_validation_dataset(args.dataset, args.pair_id)
+                train_mats, _, init_data = load_validation_dataset(args.dataset, args.pair_id)
                 output_timesteps = get_validation_prediction_timesteps(args.dataset, args.pair_id).shape[0] - lag
             else:
-                train_mats, init_data = load_dataset(args.dataset, args.pair_id)
+                train_mats, _, init_data = load_dataset(args.dataset, args.pair_id)
                 output_timesteps = get_prediction_timesteps(args.dataset, args.pair_id).shape[0] - lag
             data_mat = train_mats[0]
             data_mat = torch.tensor((data_mat.T))
@@ -204,7 +204,7 @@ def main():
         else:
             # Get input data to initialize spacetime
             if args.validation:
-                train_mats, init_mat = load_validation_dataset(args.dataset, args.pair_id)
+                train_mats, _, init_mat = load_validation_dataset(args.dataset, args.pair_id)
                 if args.pair_id in [8,9]:
                     data_mat = init_mat
                     output_timesteps = get_validation_prediction_timesteps(args.dataset, args.pair_id).shape[0] - lag

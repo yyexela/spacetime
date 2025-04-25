@@ -191,7 +191,7 @@ def main(config_path: str, save_config: bool = True) -> None:
         # Run model
         print("running")
         print(f"python {file_dir / 'run.py'} {config_path}")
-        ret = os.system(f"python {file_dir / 'run.py'} {config_path}")
+        ret = os.system(f"python {file_dir / 'run_opt.py'} {config_path}")
         if ret != 0:
             raise Exception(f"Output: {ret}")
         # Extract results
@@ -206,8 +206,8 @@ def main(config_path: str, save_config: bool = True) -> None:
                         param_space=param_dict,
                         tune_config=tune.TuneConfig(
                             #search_alg=OptunaSearch(), # Throws errors (seg faults) but still runs
-                            num_samples=10,
-                            max_concurrent_trials=1,
+                            num_samples=hp_config['model']['n_trials'],
+                            max_concurrent_trials=1, # Don't parallelize, for debugging purposes
                             metric="score",
                             mode="max",
                         ),
@@ -222,15 +222,15 @@ def main(config_path: str, save_config: bool = True) -> None:
 
     # Obtain best hyperparameter value
     best_score = results.get_best_result(metric="score", mode="max").metrics['score']
-    best_constant = results.get_best_result(metric="score", mode="max").config['constant']
-    print(f"Best score: {best_score} (params: {best_constant})")
+    best_params = results.get_best_result(metric="score", mode="max")
+    print(f"Best score: {best_score} (params: {best_params})")
 
     # Save final configuration yaml from hyperparameter optimization
     if not save_config: # Only False when unit testing
         print("Not saving final config file.")
     else:
-        config_path = file_dir / 'config' / f'config_{hp_config["dataset"]["name"]}_constant_batch_{hp_config["model"]["pair_id"]}.yaml'
-        yaml_dict['model']['constant_value'] = best_constant
+        config_path = file_dir / 'config' / f'config_{hp_config["dataset"]["name"]}_constant_batch_{hp_config["dataset"]["pair_id"]}.yaml'
+        yaml_dict['model']['constant_value'] = best_params 
         print("Final config file saved to:", config_path)
         with open(config_path, 'w') as f:
             yaml.dump(yaml_dict, f)
