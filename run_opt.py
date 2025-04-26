@@ -66,7 +66,6 @@ def main(config_path: str) -> None:
         --pair_id {pair_id}\
         --lag {lag}\
         --horizon {horizon}\
-        --n_kernels {n_kernels}\
         --mlp_n_layers {mlp_n_layers}\
         --embedding_config {embedding_config}\
         --encoder_config {encoder_config}\
@@ -97,7 +96,6 @@ def main(config_path: str) -> None:
             pair_id = pair_id,
             lag=config['model']['lag'],
             horizon=config['model']['horizon'],
-            n_kernels=config['model']['n_kernels'],
             mlp_n_layers=config['model']['mlp_n_layers'],
             embedding_config=config['model']['embedding_config'],
             encoder_config=config['model']['encoder_config'],

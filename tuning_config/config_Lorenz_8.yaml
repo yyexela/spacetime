@@ -11,14 +11,11 @@ hyperparameters:
   lag:
     type: randint
     lower_bound: 5
-    upper_bound: 15
+    upper_bound: 45
   horizon:
     type: randint
-    lower_bound: 5
-    upper_bound: 15
-  n_kernels:
-    type: choice
-    choices: [8, 16, 32, 64, 128]
+    lower_bound: 15
+    upper_bound: 100
   n_blocks:
     type: randint
     lower_bound: 3

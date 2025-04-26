@@ -122,7 +122,6 @@ def generate_config(config, template, name):
     template['model']['batch_id'] = batch_id
     template['model']['lag'] = config['lag']
     template['model']['horizon'] = config['horizon']
-    template['model']['n_kernels'] = config['n_kernels']
     template['model']['n_blocks'] = config['n_blocks']
     template['model']['weight_decay'] = config['weight_decay']
     template['model']['lr'] = config['lr']
@@ -234,10 +233,9 @@ def main(config_path: str, save_config: bool = True) -> None:
         print("Not saving final config file.")
     else:
         pair_ids = ''.join(map(str,hp_config["dataset"]["pair_id"]))
-        config_path = file_dir / 'ctf_config' / f'config_{hp_config["dataset"]["name"]}_constant_batch_{pair_ids}.yaml'
+        config_path = file_dir / 'ctf_config' / f'config_{hp_config["dataset"]["name"]}_constant_batch_{pair_ids}_optimized.yaml'
         yaml_dict['model']['lag'] = best_params['lag']
         yaml_dict['model']['horizon'] = best_params['horizon']
-        yaml_dict['model']['n_kernels'] = best_params['n_kernels']
         yaml_dict['model']['n_blocks'] = best_params['n_blocks']
         yaml_dict['model']['weight_decay'] = best_params['weight_decay']
         yaml_dict['model']['lr'] = best_params['lr']

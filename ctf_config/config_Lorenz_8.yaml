@@ -3,16 +3,13 @@ dataset:
   pair_id: [8]
 model:
   name: spacetime
-  lag: 100
+  lag: 50
   horizon: 100
   embedding_config: "embedding/repeat"
   encoder_config: "encoder/default_no_skip"
   decoder_config: "decoder/default"
   output_config: "output/default"
-  n_kernels: 32
   kernel_dim: 64
-  n_heads: 4
-  input_dim: 1
   norm_order: 1
   batch_size: 50
   dropout: 0.25
