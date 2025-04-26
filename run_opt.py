@@ -11,7 +11,6 @@ from ctf4science.eval_module import evaluate_custom
 
 # Delete results directory - used for storing batch_results
 file_dir = Path(__file__).parent
-results_file = file_dir / 'results.yaml'
 
 # Notes:
 # K value larger than 10 results in invalid spatio-temporal loss
@@ -41,13 +40,15 @@ def main(config_path: str) -> None:
 
     model_name = f"{config['model']['name']}"
 
-    # Generate a unique batch_id for this run, you can add any descriptions you want
-    #   e.g. f"batch_{learning_rate}_"
-    batch_id = "hyper_opt"
+    # batch_id is from optimize_parameters.py
+    if 'batch_id' in config['model']:
+        batch_id = config['model']['batch_id']
+    else:
+        batch_id = 0
  
     # Initialize batch results dictionary for summary
     batch_results = {
-        'batch_id': batch_id,
+        'batch_id': f"hyper_opt_{batch_id}",
         'model': model_name,
         'dataset': dataset_name,
         'pairs': []
@@ -60,6 +61,7 @@ def main(config_path: str) -> None:
         """\
         python\
         {spacetime_main_path}\
+        --batch_id {batch_id}\
         --dataset {dataset}\
         --pair_id {pair_id}\
         --lag {lag}\
@@ -90,6 +92,7 @@ def main(config_path: str) -> None:
 
         cmd_formatted = cmd.format(
             spacetime_main_path = file_dir / "main.py",
+            batch_id = batch_id,
             dataset=config['dataset']['name'],
             pair_id = pair_id,
             lag=config['model']['lag'],
@@ -134,7 +137,7 @@ def main(config_path: str) -> None:
             raise Exception(f"Output code {out}")
 
         # Load predictions
-        pred_data = torch.load(file_dir / 'tmp_pred' / 'output_mat.torch', weights_only=False)
+        pred_data = torch.load(file_dir / 'tmp_pred' / f'output_mat_{batch_id}.torch', weights_only=False)
 
         # Evaluate predictions using default metrics
         _, val_data, _ = load_validation_dataset(dataset_name, pair_id, 0.8)
@@ -148,6 +151,7 @@ def main(config_path: str) -> None:
         })
 
     # Save aggregated batch results
+    results_file = file_dir / f"results_{batch_id}.yaml"
     with open(results_file, 'w') as f:
         yaml.dump(batch_results, f)
 

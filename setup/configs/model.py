@@ -26,6 +26,7 @@ def load_model_config(config, config_dir='./configs/model', args=None):
     config = update_embedding_config_from_args(config, args)
     config = update_block_config_from_args(config, args)
     config.output_config = update_output_config_from_args(config.output_config, args)
+    config = update_config_from_args(config, args)
     config.output_config.input_dim = config.output_config.kwargs.input_dim
     config.output_config.output_dim = config.output_config.kwargs.output_dim        
     return config
@@ -89,7 +90,7 @@ def update_block_config_from_args(config, args):
     else:
         _config.kwargs.model_dim = args.model_dim
     encoder_block.mlp_config = update_mlp_config_from_args(encoder_block.mlp_config, args,
-                                                           input_dim=_config.kwargs.model_dim if args.input_dim > 1 else None)
+                                                           input_dim=config.embedding_config.kwargs.embedding_dim if args.input_dim > 1 else None)
     
     # Update remaining blocks
     encoder_block = config.encoder_config['blocks'][-1]
@@ -265,6 +266,10 @@ def update_mlp_config_from_args(config, args,
                 setattr(args, k, config.kwargs[k])
     return config
 
+def update_config_from_args(config, args, update_output_dim=False, 
+                                   output_dim=None):
+    pass
+    return config
 
 def update_output_config_from_args(config, args, update_output_dim=False, 
                                    output_dim=None):

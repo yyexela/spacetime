@@ -59,6 +59,7 @@ def initialize_args():
     parser.add_argument("--forecast_id", default=None, type=int) # Matrix X1 through X10, enter integer
     parser.add_argument("--forecast_length", default=None, type=int) # Length of forecast
     parser.add_argument("--burn_in", action='store_true') # Use provided forecast_id matrix as part of output
+    parser.add_argument("--batch_id", default="0", type=str) # Use provided forecast_id matrix as part of output
     
     # Prediction Task
     parser.add_argument('--lag', type=int, default=1, 

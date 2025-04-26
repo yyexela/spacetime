@@ -11,6 +11,7 @@ model:
   output_config: "output/default"
   n_blocks: 1
   kernel_dim: 64
+  n_kernels: 64
   norm_order: 1
   batch_size: 50
   dropout: 0.25

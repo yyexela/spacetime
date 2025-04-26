@@ -91,6 +91,8 @@ def main(config_path: str) -> None:
         --dataset {dataset}\
         --pair_id {pair_id}\
         --lag {lag}\
+        --input_dim {input_dim}\
+        --n_heads {n_heads}\
         --horizon {horizon}\
         --mlp_n_layers {mlp_n_layers}\
         --embedding_config {embedding_config}\
@@ -119,6 +121,8 @@ def main(config_path: str) -> None:
             dataset=config['dataset']['name'],
             pair_id = pair_id,
             lag=config['model']['lag'],
+            input_dim=config['model']['input_dim'],
+            n_heads=config['model']['n_heads'],
             horizon=config['model']['horizon'],
             mlp_n_layers=config['model']['mlp_n_layers'],
             embedding_config=config['model']['embedding_config'],

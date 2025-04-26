@@ -238,7 +238,7 @@ def main():
         (file_dir / 'tmp_pred').mkdir(exist_ok=True)
 
         # Save file
-        torch.save(output_mat, file_dir / 'tmp_pred' / 'output_mat.torch')
+        torch.save(output_mat, file_dir / 'tmp_pred' / f'output_mat_{args.batch_id}.torch')
     
 if __name__ == '__main__':
     main()
