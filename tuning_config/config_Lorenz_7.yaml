@@ -1,6 +1,6 @@
 dataset:
-  name: PDE_KS
-  pair_id: [8]
+  name: ODE_Lorenz
+  pair_id: [7]
 model:
   name: spacetime
   train_split: 0.8   # float in (0.7 and 1.0)

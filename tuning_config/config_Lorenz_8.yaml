@@ -12,14 +12,13 @@ model:
   decoder_config: decoder/default
   output_config: output/default
   mlp_n_layers: 1
-  kernel_dim: 64
   norm_order: 1
   batch_size: 5
-  early_stopping_epochs: 2
+  early_stopping_epochs: 20
   data_transform: mean
   loss: informer_rmse
   val_metric: informer_rmse
-  max_epochs: 2
+  max_epochs: 200
   criterion_weights:
     - 1
     - 1
@@ -27,27 +26,24 @@ model:
   no_wandb: True
 hyperparameters:
   lag:
-    type: randint
-    lower_bound: 5
-    upper_bound: 15
-  horizon:
-    type: randint
-    lower_bound: 5
-    upper_bound: 15
-  n_kernels:
     type: choice
-    choices: [8, 16, 32, 64, 128]
+    choices: [10, 15, 20, 25, 30, 35, 40, 45]
+  horizon:
+    type: choice
+    choices: [8, 16, 32, 64, 128, 256]
   n_blocks:
-    type: randint
-    lower_bound: 3
-    upper_bound: 6
+    type: choice
+    choices: [3,4,5,6]
   weight_decay:
     type: choice 
     choices: [0, 0.0001]
-  lr:
-    type: loguniform
-    lower_bound: 0.0001
-    upper_bound: 0.01
+  kernel_dim:
+    type: choice
+    choices: [32,64,128]
   dropout:
     type: choice
-    choices: [0.1, 0.2]
+    choices: [0.0, 0.25]
+  lr:
+    type: loguniform
+    lower_bound: 0.00001
+    upper_bound: 0.001
