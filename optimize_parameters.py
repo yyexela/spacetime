@@ -62,8 +62,8 @@ def create_search_space(tuning_config):
             If the parameter type is neither 'float' nor 'int'.
     """
     search_space = {}
-    for name in tuning_config['hyperparameters'].keys():
-        param_dict = tuning_config['hyperparameters'][name]
+    for name in tuning_config.keys():
+        param_dict = tuning_config[name]
         if 'type' not in param_dict:
             raise Exception(f"\'type\' not in {param_dict} keys")
 
@@ -118,14 +118,8 @@ def generate_config(config, template, name):
         - Modifies the input template dictionary by adding the suggested constant value
     """
     # Fill out dictionary
-    batch_id = str(tune.get_context().get_trial_id())
-    template['model']['batch_id'] = batch_id
-    template['model']['lag'] = config['lag']
-    template['model']['horizon'] = config['horizon']
-    template['model']['n_blocks'] = config['n_blocks']
-    template['model']['weight_decay'] = config['weight_decay']
-    template['model']['lr'] = config['lr']
-    template['model']['dropout'] = config['dropout']
+    for blank_key in config.keys():
+        template['model'][blank_key] = config[blank_key]
     # Save config
     config_path = file_dir / 'ctf_config' / f'{name}.yaml'
     with open(config_path, 'w') as f:
@@ -144,65 +138,35 @@ def main(config_path: str, save_config: bool = True) -> None:
         config_path (str): Path to the configuration file.
         save_config (str): Save the final configuration file. (only False in unit tests)
     """
-    # Load configuration
+    # Load hyperparameter configuration
     with open(config_path, 'r') as f:
         hp_config = yaml.safe_load(f)
 
-    # Blank dictionary for runnable yaml file
-    yaml_dict = {
-        "dataset":{
-            "name": "PDE_KS",
-            "pair_id": hp_config['dataset']['pair_id']
-        },
-        "model":{
-            "batch_id": "0",
-            "name": "spacetime",
-            "lag": 10,
-            "horizon": 10,
-            "embedding_config": "embedding/repeat",
-            "encoder_config": "encoder/default_no_skip",
-            "decoder_config": "decoder/default",
-            "output_config": "output/default",
-            "n_blocks": 1,
-            "mlp_n_layers": 1,
-            "kernel_dim": 64,
-            "norm_order": 1,
-            "batch_size": 5,
-            "dropout": 0.25,
-            "lr": 1e-3,
-            "weight_decay": 1e-4,
-            "max_epochs": 2,
-            "early_stopping_epochs": 2,
-            "data_transform": "mean",
-            "loss": "informer_rmse",
-            "val_metric": "informer_rmse",
-            "criterion_weights": [1, 1, 1],
-            "seed": 0,
-            "no_wandb": True
-        }
-    }
+    # Separate configuration file from hyperparameters
+    hyperparameters = hp_config.pop('hyperparameters')
+    blank_config = hp_config.copy()
 
     # Generate parameter dictionary for Ray Tune
-    param_dict = create_search_space(hp_config)
+    param_dict = create_search_space(hyperparameters)
 
     # Define objective for Ray Tune
     def objective(config):
         # Get batch_id
         batch_id = str(tune.get_context().get_trial_id())
+        # Fill out dictionary with required values
+        batch_id = str(tune.get_context().get_trial_id())
+        blank_config['model']['batch_id'] = batch_id
         # Create config file
-        config_path = generate_config(config, yaml_dict, f'hp_config_{batch_id}')
+        config_path = generate_config(config, blank_config, f'hp_config_{batch_id}')
         # Run model
-        print("running")
-        print(f"python {file_dir / 'run.py'} {config_path}")
-        ret = os.system(f"python {file_dir / 'run_opt.py'} {config_path}")
-        if ret != 0:
-            raise Exception(f"Output: {ret}")
-        # Extract results
+        run_opt_main(config_path)
+        # Extract results and clean up files
+        config_file = file_dir / 'config' / f'hp_config_{batch_id}.yaml'
         results_file = file_dir / f'results_{batch_id}.yaml'
         with open(results_file, 'r') as f:
             results = yaml.safe_load(f)
         results_file.unlink(missing_ok=True)
-        config_path.unlink(missing_ok=True)
+        config_file.unlink(missing_ok=True)
         score = sum_results(results)
         # Return score
         return {"score": score}
@@ -213,8 +177,8 @@ def main(config_path: str, save_config: bool = True) -> None:
                         param_space=param_dict,
                         tune_config=tune.TuneConfig(
                             #search_alg=OptunaSearch(), # Throws errors (seg faults) but still runs
-                            num_samples=hp_config['model']['n_trials'],
-                            max_concurrent_trials=1, # Don't parallelize, for debugging purposes
+                            num_samples=blank_config['model']['n_trials'],
+                            max_concurrent_trials=1,
                             metric="score",
                             mode="max",
                         ),
@@ -224,26 +188,23 @@ def main(config_path: str, save_config: bool = True) -> None:
     results = tuner.fit()
 
     # Obtain best hyperparameter value
-    best_score = results.get_best_result(metric="score", mode="max").metrics['score']
-    best_params = results.get_best_result(metric="score", mode="max").config
-    print(f"Best score: {best_score} (params: {best_params})")
+    result = results.get_best_result(metric="score", mode="max")
+    best_config = result.config
+    best_score = result.metrics['score']
+    print(f"Best score: {best_score} (params: {best_config})")
 
     # Save final configuration yaml from hyperparameter optimization
     if not save_config: # Only False when unit testing
         print("Not saving final config file.")
     else:
-        pair_ids = ''.join(map(str,hp_config["dataset"]["pair_id"]))
-        config_path = file_dir / 'ctf_config' / f'config_{hp_config["dataset"]["name"]}_constant_batch_{pair_ids}_optimized.yaml'
-        yaml_dict['model']['lag'] = best_params['lag']
-        yaml_dict['model']['horizon'] = best_params['horizon']
-        yaml_dict['model']['n_blocks'] = best_params['n_blocks']
-        yaml_dict['model']['weight_decay'] = best_params['weight_decay']
-        yaml_dict['model']['lr'] = best_params['lr']
-        yaml_dict['model']['dropout'] = best_params['dropout']
-        yaml_dict['model'].pop('batch_id', None)
+        pair_ids = ''.join(map(str,blank_config["dataset"]["pair_id"]))
+        blank_config['model'].pop('batch_id', None)
+        blank_config['model'].pop('n_trials', None)
+        blank_config['model'].pop('train_split', None)
+        config_path = generate_config(best_config, blank_config, f'config_{blank_config["dataset"]["name"]}_{pair_ids}_optimized')
         print("Final config file saved to:", config_path)
         with open(config_path, 'w') as f:
-            yaml.dump(yaml_dict, f)
+            yaml.dump(blank_config, f)
 
     return None
 

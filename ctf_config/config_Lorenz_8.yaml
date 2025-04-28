@@ -9,14 +9,14 @@ model:
   encoder_config: "encoder/default_no_skip"
   decoder_config: "decoder/default"
   output_config: "output/default"
-  kernel_dim: 64
+  kernel_dim: 256
   norm_order: 1
   batch_size: 50
   dropout: 0.25
   mlp_n_layers: 1
   n_blocks: 1
   lr: 1e-3
-  weight_decay: 1e-4
+  weight_decay: 0
   max_epochs: 2
   early_stopping_epochs: 2
   data_transform: "mean"
