@@ -89,6 +89,7 @@ def main(config_path: str) -> None:
         python\
         {spacetime_main_path}\
         --dataset {dataset}\
+        --batch_id {batch_id}\
         --pair_id {pair_id}\
         --lag {lag}\
         --horizon {horizon}\
@@ -116,6 +117,7 @@ def main(config_path: str) -> None:
 
         cmd_formatted = cmd.format(
             spacetime_main_path = file_dir / "main.py",
+            batch_id=batch_id,
             dataset=config['dataset']['name'],
             pair_id = pair_id,
             lag=config['model']['lag'],
@@ -159,7 +161,7 @@ def main(config_path: str) -> None:
             raise Exception(f"Output code {out}")
 
         # Load predictions
-        pred_data = torch.load(file_dir / 'tmp_pred' / 'output_mat.torch', weights_only=False)
+        pred_data = torch.load(file_dir / 'tmp_pred' / f'output_mat_{batch_id}.torch', weights_only=False)
 
         # Evaluate predictions using default metrics
         results = evaluate(dataset_name, pair_id, pred_data)

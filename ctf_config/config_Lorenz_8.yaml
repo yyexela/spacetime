@@ -3,7 +3,7 @@ dataset:
   pair_id: [8]
 model:
   name: spacetime
-  lag: 50
+  lag: 40
   horizon: 100
   embedding_config: "embedding/repeat"
   encoder_config: "encoder/default_no_skip"
