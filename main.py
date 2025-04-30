@@ -183,22 +183,32 @@ def main():
             # Get input data to initialize spacetime
             if args.validation:
                 train_mats, _, init_data = load_validation_dataset(args.dataset, args.pair_id)
-                output_timesteps = get_validation_prediction_timesteps(args.dataset, args.pair_id).shape[0] - lag
+                output_timesteps = get_validation_prediction_timesteps(args.dataset, args.pair_id).shape[0]
             else:
-                train_mats, _, init_data = load_dataset(args.dataset, args.pair_id)
-                output_timesteps = get_prediction_timesteps(args.dataset, args.pair_id).shape[0] - lag
+                train_mats, init_data = load_dataset(args.dataset, args.pair_id)
+                output_timesteps = get_prediction_timesteps(args.dataset, args.pair_id).shape[0]
             data_mat = train_mats[0]
             data_mat = torch.tensor((data_mat.T))
-            data_mat = data_mat[0:lag,:]
-            # Generate the rest of the output
-            output_mat = forecast_model(model, start_mat=data_mat, config=args,
-                                            n_out=output_timesteps, 
-                                            input_transform=input_transform, 
-                                            output_transform=output_transform)
-            # Save output
-            output_mat = np.asarray(output_mat.detach().cpu()).T
-            data_mat = np.asarray(data_mat.squeeze().T)
-            output_mat = np.concatenate([data_mat, output_mat], axis=1)
+            output_mat_full = None
+            start_idx = 0
+            while output_mat_full is None or output_mat_full.shape[1] < output_timesteps:
+                data_mat_tmp = data_mat[start_idx*horizon:start_idx*horizon + lag,:]
+                # Generate the rest of the output
+                output_mat = forecast_model(model, start_mat=data_mat_tmp, config=args,
+                                                n_out=horizon, 
+                                                input_transform=input_transform, 
+                                                output_transform=output_transform)
+                # Save output
+                output_mat = np.asarray(output_mat.detach().cpu()).T
+                data_mat_tmp = np.asarray(data_mat_tmp.squeeze().T)
+                if start_idx == 0:
+                    output_mat_full = np.concatenate([data_mat_tmp, output_mat], axis=1)
+                else:
+                    output_mat_full = np.concatenate([output_mat_full, output_mat], axis=1)
+
+                # Update for next loop
+                start_idx += 1
+            output_mat_full = output_mat_full[:,0:output_timesteps]
 
         # Generate forecasts
         else:
