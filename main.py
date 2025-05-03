@@ -63,7 +63,7 @@ def main():
     output_dim = y.shape[1]
     
     # Initialize Model
-    args.device = (torch.device('cuda:2') 
+    args.device = (torch.device('cuda:1') 
                    if torch.cuda.is_available() and not args.no_cuda
                    else torch.device('cpu'))
     model_configs = {'embedding_config': args.embedding_config,
