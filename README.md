@@ -5,8 +5,11 @@
 - `configs/loader` for ODE_Lorenz and PDE_KS
 - `dataloaders` for ODE_Lorenz and PDE_KS
 - Skip connection doesn't work for multivariate out of the box (see GH issues)
-- Length of each of validation, testing, and training datasets need to be larger than batch size
 - Skip testing dataset
+- Length of each of validation, testing, and training datasets need to be larger than batch size
+  - Just using full data for training set, and setting validation set equal to training set
+  - Check to make sure batch size is less than training set size
+
 
 Environment:
 ```bash

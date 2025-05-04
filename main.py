@@ -63,7 +63,7 @@ def main():
     output_dim = y.shape[1]
     
     # Initialize Model
-    args.device = (torch.device('cuda:1') 
+    args.device = (torch.device('cuda') 
                    if torch.cuda.is_available() and not args.no_cuda
                    else torch.device('cpu'))
     model_configs = {'embedding_config': args.embedding_config,
@@ -209,6 +209,7 @@ def main():
                 # Update for next loop
                 start_idx += 1
             output_mat_full = output_mat_full[:,0:output_timesteps]
+            output_mat = output_mat_full
 
         # Generate forecasts
         else:

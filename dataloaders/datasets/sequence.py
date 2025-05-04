@@ -116,6 +116,10 @@ class SequenceDataset:
             train_resolution = [train_resolution]
         assert len(train_resolution) == 1, "Only one train resolution supported for now"
 
+        print("----------------------------------------------")
+        print("Training dataset number of samples:", len(self.dataset_train))
+        print("----------------------------------------------")
+
         return self._dataloader(
             self.dataset_train,
             resolutions=train_resolution,

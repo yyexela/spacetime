@@ -1,32 +1,31 @@
 dataset:
-  name: ODE_Lorenz
+  name: PDE_KS
   pair_id:
-  - 8
+  - 9
 model:
-  batch_size: 5
+  batch_size: 128
   criterion_weights:
   - 1
   - 1
   - 1
   data_transform: mean
   decoder_config: decoder/default
-  dropout: 0.2
+  dropout: 0.0
   early_stopping_epochs: 2
   embedding_config: embedding/repeat
   encoder_config: encoder/default_no_skip
-  horizon: 10
+  horizon: 12
   kernel_dim: 64
-  lag: 14
+  lag: 10
   loss: informer_rmse
-  lr: 0.0003815413829249513
+  lr: 0.004444860960624628
   max_epochs: 2
   mlp_n_layers: 1
-  n_blocks: 4
-  n_kernels: 32
+  n_blocks: 6
   name: spacetime
   no_wandb: true
   norm_order: 1
   output_config: output/default
   seed: 0
   val_metric: informer_rmse
-  weight_decay: 0.0001
+  weight_decay: 0
