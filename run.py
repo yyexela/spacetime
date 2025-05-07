@@ -56,11 +56,6 @@ def main(config_path: str) -> None:
     dataset_name = config['dataset']['name']
     pair_ids = parse_pair_ids(config['dataset'])
 
-    if dataset_name == "ODE_Lorenz":
-        id_dict = id_dict_Lorenz
-    elif dataset_name == "PDE_KS":
-        id_dict = id_dict_KS
-
     model_name = f"{config['model']['name']}"
 
     # Generate a unique batch_id for this run

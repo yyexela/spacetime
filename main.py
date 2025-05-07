@@ -170,7 +170,7 @@ def main():
         wandb.log(log_metrics)
 
     # Compute forecast past training set for N steps
-    if experiment_configs['dataset']['_name_'] in ['ODE_Lorenz', 'PDE_KS']:
+    if experiment_configs['dataset']['_name_'] in ['ODE_Lorenz', 'PDE_KS', 'KS_Official', 'Lorenz_Official']:
         outputs = dict()
         outputs['reconstructions'] = dict()
         outputs['forecasts'] = dict()

@@ -42,7 +42,6 @@ class SequenceDataset:
         cls.registry[cls._name_] = cls
 
     def __init__(self, _name_, data_dir=None, tbptt=False, chunk_len=None, overlap_len=None, **dataset_cfg):
-        assert _name_ == self._name_
         self.data_dir = Path(data_dir).absolute() if data_dir is not None else None
 
         # Arguments for TBPTT: only used if tbptt is True and are passed to TBPTTDataLoader 

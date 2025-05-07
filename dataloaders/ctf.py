@@ -367,10 +367,11 @@ class ODE_Lorenz(CTFSequenceDataset):
     }
 
 def load_data(config_dataset, config_loader):
-    if config_dataset['_name_'] == "ODE_Lorenz":
+    if config_dataset['_name_'] in ["ODE_Lorenz", "Lorenz_Official"]:
         dataset = ODE_Lorenz(**config_dataset)
-    elif config_dataset['_name_'] == "PDE_KS":
+    elif config_dataset['_name_'] in ["PDE_KS", "KS_Official"]:
         dataset = PDE_KS(**config_dataset)
+    dataset._name_ = config_dataset['_name_']
     dataset.setup()
     
     train_loader = dataset.train_dataloader(**config_loader)
