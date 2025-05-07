@@ -46,13 +46,13 @@ model:
   - 1
   data_transform: mean
   decoder_config: decoder/default
-  early_stopping_epochs: 2
+  early_stopping_epochs: 20
   embedding_config: embedding/repeat
   encoder_config: encoder/default_no_skip
   loss: informer_rmse
-  max_epochs: 2
+  max_epochs: 200
   mlp_n_layers: 1
-  n_trials: 2
+  n_trials: 999999999
   name: spacetime
   no_wandb: true
   norm_order: 1

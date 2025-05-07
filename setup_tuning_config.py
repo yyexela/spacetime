@@ -17,17 +17,17 @@ for dataset in ['ODE_Lorenz', "PDE_KS"]:
 
         if pair_id in list(range(6,7+1)):
             # limited training data 
-            hp_config['hyperparameters']['lag']['lower_bound'] = 5
-            hp_config['hyperparameters']['lag']['upper_bound'] = 20
-            hp_config['hyperparameters']['horizon']['lower_bound'] = 5
-            hp_config['hyperparameters']['horizon']['upper_bound'] = 20
+            hp_config['hyperparameters']['lag']['lower_bound'] = 10
+            hp_config['hyperparameters']['lag']['upper_bound'] = 45
+            hp_config['hyperparameters']['horizon']['lower_bound'] = 10
+            hp_config['hyperparameters']['horizon']['upper_bound'] = 45
             hp_config['model']['batch_size'] = 5
         elif pair_id in list(range(8,10+1)):
             # limited burn-in data but not limited training data 
-            hp_config['hyperparameters']['lag']['lower_bound'] = 5
-            hp_config['hyperparameters']['lag']['upper_bound'] = 20
-            hp_config['hyperparameters']['horizon']['lower_bound'] = 5
-            hp_config['hyperparameters']['horizon']['upper_bound'] = 20
+            hp_config['hyperparameters']['lag']['lower_bound'] = 10
+            hp_config['hyperparameters']['lag']['upper_bound'] = 45
+            hp_config['hyperparameters']['horizon']['lower_bound'] = 10
+            hp_config['hyperparameters']['horizon']['upper_bound'] = 45
             hp_config['model']['batch_size'] = 128
         else:
             # normal data
