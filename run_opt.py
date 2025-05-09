@@ -136,6 +136,7 @@ def main(config_path: str) -> None:
 
         # Load predictions
         pred_data = torch.load(file_dir / 'tmp_pred' / f'output_mat_{batch_id}.torch', weights_only=False)
+        pred_data = pred_data.T
 
         # Evaluate predictions using default metrics
         _, val_data, _ = load_validation_dataset(dataset_name, pair_id, 0.8)

@@ -185,9 +185,9 @@ class CTFDataset(Dataset):
         if self.scale:
             all_data = list()
             if self.validation:
-                data_mats, _, _ = load_validation_dataset(self.name, self.pair_id)
+                data_mats, _, _ = load_validation_dataset(self.name, self.pair_id, transpose=True)
             else:
-                data_mats, _ = load_dataset(self.name, self.pair_id)
+                data_mats, _ = load_dataset(self.name, self.pair_id, transpose=True)
             for i, data_mat in enumerate(data_mats):
                 data_mat = np.swapaxes(data_mat, 0, 1)
                 data_mat = torch.Tensor(data_mat.astype(np.float32))
